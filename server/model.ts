@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 // data model for cards and game state
 
-export const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+export const RANKS = ["A", "2", "3", "Q", "4", "5", "6", "7", "8", "9", "10", "J", "K"]
 export const SUITS = ["♦️", "♥️", "♣️", "♠️"]
 
 export type CardId = string
@@ -19,8 +19,13 @@ export interface Card {
 /**
  * determines whether one can play a card given the last card played
  */
-export function areCompatible(card: Card, lastCardPlayed: Card) {
-  return card.rank === lastCardPlayed.rank || card.suit === lastCardPlayed.suit
+export function areCompatible(card: Card, lastCardPlayed: Card): boolean {
+  // Check if the card is a queen or the last card played is a queen
+  if (card.rank === 'Q' || lastCardPlayed.rank === 'Q') {
+    return true;
+  }
+  // Original compatibility logic for non-queen cards
+  return card.rank === lastCardPlayed.rank || card.suit === lastCardPlayed.suit;
 }
 
 export type GamePhase = "initial-card-dealing" | "play" | "game-over"
@@ -31,6 +36,7 @@ export interface GameState {
   currentTurnPlayerIndex: number
   phase: GamePhase
   playCount: number
+  playerWithOneCard: string[];
 }
 
 /**
@@ -45,6 +51,8 @@ export function computePlayerCardCounts({ playerNames, cardsById }: GameState) {
   })
   return counts
 }
+
+
 
 /**
  * finds the last played card
@@ -74,7 +82,7 @@ export function getLastPlayedCard(cardsById: Record<CardId, Card>) {
 /**
  * creates an empty GameState in the initial-card-dealing state
  */
- export function createEmptyGame(playerNames: string[], numberOfDecks = 5, rankLimit = Infinity): GameState {
+ export function createEmptyGame(playerNames: string[], numberOfDecks =  5, rankLimit =  Infinity): GameState {
   const cardsById: Record<CardId, Card> = {}
   let cardId = 0
 
@@ -100,6 +108,7 @@ export function getLastPlayedCard(cardsById: Record<CardId, Card>) {
     currentTurnPlayerIndex: 0,
     phase: "initial-card-dealing",
     playCount: 0,
+    playerWithOneCard: [], // new array for players with one card
   }
 }
 
@@ -127,6 +136,12 @@ export interface PlayCardAction {
   action: "play-card"
   playerIndex: number
   cardId: CardId
+}
+
+// question 6 new Config interface
+export interface Config {
+  numberOfDecks: number;
+  rankLimit: number;
 }
 
 export type Action = DrawCardAction | PlayCardAction
@@ -203,7 +218,8 @@ export function doAction(state: GameState, action: Action): Card[] {
       state.phase = "play"
     }
     moveToNextPlayer(state)
-  } else if (action.action === "play-card") {
+  } 
+  else if (action.action === "play-card") {
     const card = state.cardsById[action.cardId]
     if (card.playerIndex !== state.currentTurnPlayerIndex) {
       // not your card
@@ -230,6 +246,18 @@ export function doAction(state: GameState, action: Action): Card[] {
   }
 
   ++state.playCount
+  
+  /////////////////////////////////////////////////////// question 3
+  state.playerWithOneCard = [];
+
+  const cardCounts = computePlayerCardCounts(state);
+  cardCounts.forEach((count, index) => {
+    if (count === 1) {
+      // If exactly one card, add the player index as a string
+      state.playerWithOneCard.push(index.toString());
+    }
+  })
+  /////////////////////////////////////////////////////// question 3
 
   return changedCards
 }

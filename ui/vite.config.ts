@@ -21,10 +21,10 @@ export default defineConfig({
   ],
 
 	server: {
-		port: parseInt(process.env.UI_PORT || "8100"),
+		port: 8100,
 		proxy: {
 			"^/socket.io": {
-				target: `http://127.0.0.1:${process.env.SERVER_PORT || "8101"}`,
+				target: "http://127.0.0.1:8101",
         ws: true,
 			},
     }
