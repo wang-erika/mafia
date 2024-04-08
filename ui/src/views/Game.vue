@@ -19,28 +19,15 @@ import { computed, onMounted, ref, Ref } from 'vue'
 import { io } from "socket.io-client"
 import { Card, GamePhase, Action, formatCard, CardId } from "../../../server/model"
 
-// props
-interface Props {
-  playerIndex?: string
-}
-
-// default values for props
-const props = withDefaults(defineProps<Props>(), {
-  playerIndex: "all",
-})
-
 const socket = io()
-let x = props.playerIndex
-let playerIndex: number | "all" = parseInt(x) >= 0 ? parseInt(x) : "all"
-console.log("playerIndex", JSON.stringify(playerIndex))
-socket.emit("player-index", playerIndex)
+const playerIndex: Ref<number | "all"> = ref("all")
 
 const cards: Ref<Card[]> = ref([])
 const currentTurnPlayerIndex = ref(-1)
 const phase = ref("")
 const playCount = ref(-1)
 
-const myTurn = computed(() => currentTurnPlayerIndex.value === playerIndex && phase.value !== "game-over")
+const myTurn = computed(() => currentTurnPlayerIndex.value === playerIndex.value && phase.value !== "game-over")
 
 socket.on("all-cards", (allCards: Card[]) => {
   cards.value = allCards
@@ -50,7 +37,10 @@ socket.on("updated-cards", (updatedCards: Card[]) => {
   applyUpdatedCards(updatedCards)
 })
 
-socket.on("game-state", (newCurrentTurnPlayerIndex: number, newPhase: GamePhase, newPlayCount: number) => {
+socket.on("game-state", (newPlayerIndex: number, newCurrentTurnPlayerIndex: number, newPhase: GamePhase, newPlayCount: number) => {
+  if (newPlayerIndex != null) {
+    playerIndex.value = newPlayerIndex
+  }
   currentTurnPlayerIndex.value = newCurrentTurnPlayerIndex
   phase.value = newPhase
   playCount.value = newPlayCount
@@ -66,8 +56,8 @@ function doAction(action: Action) {
 }
 
 async function drawCard() {
-  if (typeof playerIndex === "number") {
-    const updatedCards = await doAction({ action: "draw-card", playerIndex })
+  if (typeof playerIndex.value === "number") {
+    const updatedCards = await doAction({ action: "draw-card", playerIndex: playerIndex.value })
     if (updatedCards.length === 0) {
       alert("didn't work")
     }
@@ -75,8 +65,8 @@ async function drawCard() {
 }
 
 async function playCard(cardId: CardId) {
-  if (typeof playerIndex === "number") {
-    const updatedCards = await doAction({ action: "play-card", playerIndex, cardId })
+  if (typeof playerIndex.value === "number") {
+    const updatedCards = await doAction({ action: "play-card", playerIndex: playerIndex.value, cardId })
     if (updatedCards.length === 0) {
       alert("didn't work")
     }
