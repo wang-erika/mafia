@@ -9,15 +9,15 @@ import App from './App.vue'
 import Game from './views/Game.vue'
 
 const routes = [
-  {
-    path: "/",
-    component: Game,
-    // props (route) {
-    //   return {
-    //     playerIndex: route.params.playerIndex
-    //   }
-    // }
-  }
+	{
+		path: "/:playerIndex",
+		component: Game,
+		props (route) {
+			return {
+				playerIndex: route.params.playerIndex
+			}
+		}
+	}
 ]
 
 const router = createRouter({

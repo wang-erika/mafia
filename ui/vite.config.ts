@@ -21,17 +21,11 @@ export default defineConfig({
   ],
 
 	server: {
-		port: 8221,
+		port: parseInt(process.env.UI_PORT || "8100"),
 		proxy: {
 			"^/socket.io": {
-				target: "http://127.0.0.1:8228",
-        ws: true
-			},
-      "^/login-callback": {
-				target: "http://127.0.0.1:8228",
-			},
-      "^/api": {
-				target: "http://127.0.0.1:8228",
+				target: `http://127.0.0.1:${process.env.SERVER_PORT || "8101"}`,
+        ws: true,
 			},
     }
 	},
