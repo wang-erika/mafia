@@ -7,16 +7,14 @@ const url = 'mongodb://127.0.0.1:27017'
 const client = new MongoClient(url)
 
 // Example messages data
-const messages: Message[] = [
+const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Message type requires _id
     {
-        _id: 'message1',
-        senderId: 'user1',
+        senderId: 'user0',
         text: 'Hello, World!',
         timestamp: new Date(),
     },
     {
-        _id: 'message2',
-        senderId: 'user2',
+        senderId: 'user1',
         text: 'Hi there!',
         timestamp: new Date(),
     },
