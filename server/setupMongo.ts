@@ -23,29 +23,19 @@ const messages: Message[] = [
 ]
 
 async function main() {
-    try {
         await client.connect();
         console.log('Connected successfully to MongoDB')
 
         const db = client.db("chatApp")
   
         // set up unique index for upsert -- to make sure a customer cannot have more than one draft order
-        await db.collection('messages').createIndex({ senderId: 1 })
+        db.collection('messages').createIndex({ senderId: 1 })
 
-        // Insert initial messages data if the collection is empty
-        const messagesCount = await db.collection('messages').countDocuments()
-        if (messagesCount === 0) {
-            console.log("Inserting initial messages")
-            await db.collection('messages').insertMany(messages as any)
-        } else {
-            console.log("Messages collection already has data, skipping initial insert")
-        }
-    } catch (err) {
-        console.error('An error occurred:', err)
-    } finally {
-        await client.close()
-    }
+        // add data
+        console.log("inserting messages", await db.collection("messages").insertMany(messages as any))
+        
+        process.exit(0)
 }
 
-main().catch(console.error)
+main()
 
