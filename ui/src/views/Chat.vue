@@ -2,7 +2,8 @@
   <div class="chat-container">
     <ul class="messages">
       <li v-for="message in messagesData" :key="message._id">
-        {{ message.senderId }}: {{ message.msg }}
+        {{ message.senderId }}: {{ message.text }}
+        {{ message.timestamp }}
       </li>
     </ul>
     <form @submit.prevent="sendChatMessage">

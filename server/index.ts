@@ -26,8 +26,9 @@ client.connect().then(() => {
     //getting all the entries: 
     app.get('/api/entries', async (req, res) => {
         try {
-            const entries = await messages.find({}).toArray(); // Find all entries
-            res.status(200).json(entries);
+            const entries = await messages.find({}).toArray();
+            console.log(entries)
+            res.status(200).json(entries);    
         } catch (error) {
             res.status(500).json({ message: "Failed to fetch entries", error: error.message });
         }
