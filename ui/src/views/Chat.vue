@@ -1,14 +1,14 @@
 <template>
   <div class="chat-container">
     <ul class="messages">
-      <li v-for="message in messagesData" :key="message._id">
+      <li v-for="message in messagesData" :key="message._id.toString()">
         {{ message.senderId }}: {{ message.text }}
         {{ message.timestamp }}
       </li>
     </ul>
-    <form @submit.prevent="sendChatMessage">
+    <form>
       <input v-model="newMessage" placeholder="Type a message..." />
-      <button type="submit">Send</button>
+      <button @click.prevent="sendChatMessage()">Send</button>
     </form>
   </div>
 </template>
@@ -17,29 +17,31 @@
 import { onMounted, ref } from 'vue';
 import { Message } from "../../../server/data";
 import { io } from "socket.io-client";
-const socket = io('http://localhost:8130');
-// No need to declare type here if you're not initializing immediately
+const socket = io('http://localhost:8131');
 
 const newMessage = ref('');
 const messagesData = ref<Message[]>([]);
 
-const sendChatMessage = (): void => {
-  if (!newMessage.value.trim()) return;
-  // Emitting the message to the server
-  socket.emit('sendMessage', { 
-    msg: newMessage.value, 
-    senderId: 'SenderName' // Adjust as necessary
+const sendChatMessage = () => { 
+    if (!newMessage.value.trim()){
+      console.log("no work")
+      return}
+    console.log(newMessage.value)
+    socket.emit('sendMessage', {  //emit with msg and senderId
+      senderId: 'SenderName',
+      text: newMessage.value
   });
   newMessage.value = ''; // Clear the input field after sending
+
 };
 
 onMounted(() => {
-  fetchInitialMessages();
+  fetchMessages();
 });
 
-async function fetchInitialMessages() {
+async function fetchMessages() {
     try {
-        const response = await fetch('/api/entries'); // Ensure this matches your Express route
+        const response = await fetch('/api/entries'); 
         if (!response.ok) {
             throw new Error('Failed to fetch initial messages');
         }
