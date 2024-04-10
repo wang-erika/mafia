@@ -3,6 +3,8 @@ import { MongoClient, Collection, Db, ObjectId } from 'mongodb'
 import http from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import { Message } from './data'
+import moment from 'moment';
+
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017'
@@ -27,8 +29,12 @@ client.connect().then(() => {
     app.get('/api/entries', async (req, res) => {
         try {
             const entries = await messages.find({}).toArray();
-            console.log(entries)
-            res.status(200).json(entries);    
+            const formattedEntries = entries.map(entry => ({
+                ...entry,
+                timestamp: moment(entry.timestamp).format('YYYY-MM-DD HH:mm:ss')
+            }));
+            console.log(formattedEntries)
+            res.status(200).json(formattedEntries);    
         } catch (error) {
             res.status(500).json({ message: "Failed to fetch entries", error: error.message });
         }
