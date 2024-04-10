@@ -1,46 +1,55 @@
 <template>
   <div class="chat-container">
     <ul class="messages">
-      <li v-for="message in messages" :key="message.id">
-        {{ message.sender }}: {{ message.text }}
+      <li v-for="message in messagesData" :key="message._id">
+        {{ message.senderId }}: {{ message.msg }}
       </li>
     </ul>
-    <form @submit.prevent="sendMessage">
+    <form @submit.prevent="sendChatMessage">
       <input v-model="newMessage" placeholder="Type a message..." />
       <button type="submit">Send</button>
     </form>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ChatComponent',
-  data() {
-    return {
-      newMessage: '',
-      messages: [
-        { id: 1, sender: 'User1', text: 'Hello!' },
-        { id: 2, sender: 'User2', text: 'Hi there!' },
-        // More messages can be added here
-      ],
-    };
-  },
-  methods: {
-    sendMessage() {
-      // This method would be updated to actually send the message
-      // For demonstration, it just adds the message to the local array
-      const newId = this.messages.length + 1;
-      const message = {
-        id: newId,
-        sender: 'Me', // This should be dynamically set based on the actual user
-        text: this.newMessage,
-      };
-      this.messages.push(message);
-      this.newMessage = ''; // Reset input field after sending
-    },
-  },
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { Message } from "../../../server/data";
+import { io } from "socket.io-client";
+const socket = io('http://localhost:8130');
+// No need to declare type here if you're not initializing immediately
+
+const newMessage = ref('');
+const messagesData = ref<Message[]>([]);
+
+const sendChatMessage = (): void => {
+  if (!newMessage.value.trim()) return;
+  // Emitting the message to the server
+  socket.emit('sendMessage', { 
+    msg: newMessage.value, 
+    senderId: 'SenderName' // Adjust as necessary
+  });
+  newMessage.value = ''; // Clear the input field after sending
 };
+
+onMounted(() => {
+  fetchInitialMessages();
+});
+
+async function fetchInitialMessages() {
+    try {
+        const response = await fetch('/api/entries'); // Ensure this matches your Express route
+        if (!response.ok) {
+            throw new Error('Failed to fetch initial messages');
+        }
+        const data = await response.json();
+        messagesData.value = data;
+    } catch (error) {
+        console.error('Error fetching initial messages:', error);
+    }
+}
 </script>
+
 
 <style scoped>
 .chat-container {

@@ -10,12 +10,12 @@ const client = new MongoClient(url)
 const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Message type requires _id
     {
         senderId: 'user0',
-        text: 'Hello, World!',
+        text: 'test0!',
         timestamp: new Date(),
     },
     {
         senderId: 'user1',
-        text: 'Hi there!',
+        text: 'test',
         timestamp: new Date(),
     },
 ]
