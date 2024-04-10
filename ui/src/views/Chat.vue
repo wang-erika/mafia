@@ -32,11 +32,13 @@ const sendChatMessage = () => {
       text: newMessage.value
   });
   newMessage.value = ''; // Clear the input field after sending
-
 };
 
 onMounted(() => {
   fetchMessages();
+  socket.on("receiveMessage", (userNewMessage: any) => {
+    messagesData.value.push(userNewMessage)
+})
 });
 
 async function fetchMessages() {
