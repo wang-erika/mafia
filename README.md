@@ -13,3 +13,17 @@ Extras:
 ▪ Admin user role and role-based access control (RBAC) for non-admins
 ▪ GraphQL-based API (requires some self study)
 ▪ Scale out Socket.IO server layer (requires some self study)
+
+
+Running: 
+server:
+docker run -p 127.0.0.1:27017:27017 -d --rm --name mongo mongo:7.0.5
+npm run setup 
+npm start 
+
+ui/general
+npm run dev
+npm install moment (for timestamp)
+
+
+
