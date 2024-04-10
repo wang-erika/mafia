@@ -3,6 +3,7 @@ import { MongoClient, Collection, Db, ObjectId } from 'mongodb'
 import http from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import { Message } from './data'
+import { Player, GameState, createEmptyGame, getPlayerListAndStatus } from './model2'
 import moment from 'moment';
 
 
@@ -46,6 +47,7 @@ client.connect().then(() => {
     });
 
     io.on('connection', (socket) => {
+
         console.log('New client connected');
     
         socket.on('disconnect', () => {
