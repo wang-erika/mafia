@@ -13,8 +13,8 @@ let messages: Collection<any>;
 // Express setup
 const app = express();
 const PORT = parseInt(process.env.PORT) || 8131;
-const server = http.createServer(app); // Corrected line
-const io = new Server(server, {
+const server = http.createServer(app); 
+const io = new Server(server, { //set up cors because then server can accept connections from client's different port!
     cors: {
       origin: "http://localhost:8130",
       methods: ["GET", "POST"],

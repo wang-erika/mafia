@@ -1,12 +1,14 @@
 <template>
   <div class="chat-container">
+    <span>
+      <h3>Day Number</h3>
+    </span>
     <ul class="messages">
       <li v-for="message in messagesData" :key="message._id.toString()">
   <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
   <span class="timestamp">{{ formatTimestamp(message.timestamp) }}
 </span>
 </li>
-
     </ul>
     <form>
       <input v-model="newMessage" placeholder="Type a message..." />
@@ -16,19 +18,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { Message } from "../../../server/data";
+import { computed, ref, Ref, reactive, onMounted } from 'vue';
+import { Message, Config } from "../../../server/data";
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
 
-const newMessage = ref('');
-const messagesData = ref<Message[]>([]);
+const newMessage = ref('')
+const messagesData = ref<Message[]>([])
+
 
 function formatTimestamp(timestamp: any) {
   return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
 }
-
 
 const sendChatMessage = () => { 
     if (!newMessage.value.trim()){
@@ -36,7 +38,7 @@ const sendChatMessage = () => {
       return}
     console.log(newMessage.value)
     socket.emit('sendMessage', { 
-      senderId: 'SenderName',
+      senderId: 'NewUser',
       text: newMessage.value
   });
   newMessage.value = ''; // Clear the input field after sending
@@ -66,9 +68,9 @@ async function fetchMessages() {
 
 <style scoped>
 .chat-container {
-  max-width: 400px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }

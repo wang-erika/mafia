@@ -6,4 +6,11 @@ export interface Message {
     timestamp: Date;
 }
 
+export interface Config {
+    numberDays: number
+    lengthDay: number
+    lengthNight: number
+    votingType: string
+  }
+
 
