@@ -17,7 +17,7 @@
     "@types/node": "18"
   },
   "scripts": {
-    "start": "ts-node-dev --respawn index.ts",
+    "start": "ts-node-dev --respawn server.ts",
     "setup": "ts-node setupMongo.ts"
   }
 }
