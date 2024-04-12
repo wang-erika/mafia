@@ -1,7 +1,9 @@
-import express from 'express';
-import { MongoClient, Collection, Db, ObjectId } from 'mongodb';
-import http from 'http';
-import { Server } from 'socket.io';
+import express from 'express'
+import { MongoClient, Collection, Db, ObjectId } from 'mongodb'
+import http from 'http'
+import { Server as SocketIOServer } from 'socket.io'
+import { Message } from './data'
+import { Player, GameState, createEmptyGame, getPlayerListAndStatus } from './model2'
 import moment from 'moment';
 
 // MongoDB setup
@@ -64,10 +66,30 @@ io.on('connection', (socket) => {
     });
 });
 
+
 client.connect().then(() => {
     console.log('Connected successfully to MongoDB');
     db = client.db("chatApp");
     messages = db.collection('messages');
+    io.on('connection', (socket) => {
+
+        console.log('New client connected');
+    
+        socket.on('disconnect', () => {
+            console.log('Client disconnected');
+        });
+            socket.on('sendMessage', async ({ msg, senderId }) => {
+            console.log('Message received:', msg, 'from', senderId);
+    
+            const messageDocument = {
+                senderId,
+                text: msg, // Ensure this aligns with your database schema; previously it was just `msg`
+                timestamp: new Date(),
+            };
+          
+            try {
+                const result = await messages.insertOne(messageDocument);
+                console.log('Message saved to database with id:', result.insertedId);
     
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
