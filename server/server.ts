@@ -10,7 +10,7 @@ import session from 'express-session'
 import passport from 'passport'
 import cors from 'cors'
 import { ApolloServer } from 'apollo-server-express';
-// import { typeDefs, resolvers } from './graphql';
+import { typeDefs, resolvers } from './graphql';
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017';
@@ -30,20 +30,24 @@ const io = new Server(server, { //set up cors because then server can accept con
     },
   });
 
+
+  // Setup Apollo Server
+const apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req, res }) => ({ db, req, res }) // Pass db and optionally req, res to resolvers
+});
+
+async function startApolloServer() {
+    await apolloServer.start();
+    apolloServer.applyMiddleware({ app, path: '/graphql' }); // Setup GraphQL endpoint
+}
+
 //setup CORS
 app.use(cors({
     origin: "http://localhost:8130",
     credentials: true
 }))
-
-
-// // Apollo setup
-// const apolloServer = new ApolloServer({
-//     typeDefs,
-//     resolvers,
-//     context: ({ req, res }) => ({ req, res, db }) // Include db here if your resolvers need it
-// });
-// apolloServer.applyMiddleware({ app, path: '/graphql' });
   
 
 //session setup for passport
@@ -123,39 +127,44 @@ client.connect().then(() => {
     messages = db.collection('messages');
 
     //oidc setup
-    setupOIDC().then(() => {
-        io.on('connection', (socket) => {
-            console.log('New client connected');
-        
-            socket.on('disconnect', () => {
-                console.log('Client disconnected');
+    startApolloServer().then(() => {
+        console.log("started apollo server");
+        console.log(`GraphQL ready at http://localhost:${PORT}/graphql`);
+        setupOIDC().then(() => {
+            
+            io.on('connection', (socket) => {
+                console.log('New client connected');
+
+                socket.on('disconnect', () => {
+                    console.log('Client disconnected');
+                });
+
+                socket.on('sendMessage', async ({ msg, senderId }) => {
+                    console.log('Message received:', msg, 'from', senderId);
+                    const messageDocument = {
+                        senderId,
+                        text: msg,
+                        timestamp: new Date(),
+                    };
+
+                    try {
+                        const result = await messages.insertOne(messageDocument);
+                        console.log('Message saved to database with id:', result.insertedId);
+                        io.emit('messageSaved', { message: messageDocument, id: result.insertedId });
+                    } catch (error) {
+                        console.error('Failed to save message to database', error);
+                    }
+                });
             });
-    
-            socket.on('sendMessage', async ({ msg, senderId }) => {
-                console.log('Message received:', msg, 'from', senderId);
-                const messageDocument = {
-                    senderId,
-                    text: msg,
-                    timestamp: new Date(),
-                };
-    
-                try {
-                    const result = await messages.insertOne(messageDocument);
-                    console.log('Message saved to database with id:', result.insertedId);
-                    io.emit('messageSaved', { message: messageDocument, id: result.insertedId });
-                } catch (error) {
-                    console.error('Failed to save message to database', error);
-                }
-            });
+        }).catch(err => {
+            console.error('OIDC setup failed: ', err)
+        })
+
+        server.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
         });
-    }).catch(err => {
-        console.error('OIDC setup failed: ', err)
+
+    }).catch(error => {
+        console.error('Failed to connect to MongoDB', error);
     })
-
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-
-}).catch(error => {
-    console.error('Failed to connect to MongoDB', error);
 });

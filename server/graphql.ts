@@ -1,5 +1,9 @@
 import { gql } from 'apollo-server';
-import { GameState, startGame } from './model2';
+import { GameState, startGame, Player} from './model2';
+import { MongoClient, Db } from 'mongodb'
+import { ApolloServer } from 'apollo-server';
+
+
 
 export const typeDefs = gql`
   enum Status {
@@ -39,38 +43,32 @@ export const typeDefs = gql`
     gameState: GameState
   }
 
-  type Mutation {
-    startGame(playerInput: PlayerInput!): GameState
-  }
-
-  input PlayerInput {
-    id: String!
-    name: String!
-    role: Role!
-    status: Status!
-    votes: [String]!
-    killVote: [String]
-  }
 `;
 
-
-// export const resolvers = {
-//     Query: {
-//       gameState: async (_, __, { db }) => {
-//         // Fetch the current game state
-//         return await db.collection('GameState').findOne({});
-//       }
-//     },
-//     Mutation: {
-//       startGame: async (_, { playerInput }, { db }) => {
-//         const gameState = await db.collection('GameState').findOne({});
-//         if (gameState) {
-//           // Assuming startGame modifies gameState in some way
-//           startGame(gameState, playerInput);
-//           await db.collection('GameState').updateOne({}, { $set: gameState });
-//           return gameState;
-//         }
-//         throw new Error('No game to start');
-//       }
-//     }
-//   };
+// Define TypeScript interface for Context
+interface Context {
+    db: Db;
+  }
+  
+  
+  // Define Resolvers with TypeScript Typing
+  export const resolvers = {
+    Query: {
+      gameState: async (_: any, __: any, { db }: Context) => {
+        return await db.collection('GameState').findOne({});
+      }
+    }
+    // Mutation: {
+    //   startGame: async (_: any, { playerInput }: { playerInput: PlayerInput }, { db }: Context) => {
+    //     const gameState = await db.collection('GameState').findOne({});
+    //     if (gameState) {
+    //       // Assuming startGame modifies the gameState based on playerInput
+    //       // This function should be defined elsewhere and properly typed
+    //       startGame(gameState, playerInput);
+    //       await db.collection('GameState').updateOne({}, { $set: gameState });
+    //       return gameState;
+    //     }
+    //     throw new Error('No game to start');
+    //   }
+    // }
+  };
