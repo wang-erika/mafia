@@ -3,14 +3,14 @@ import { MongoClient, Collection, Db, ObjectId } from 'mongodb'
 import http from 'http'
 import { Server } from 'socket.io'
 import { Message } from './data'
-import { Player, GameState, createEmptyGame, getPlayerListAndStatus } from './model2'
+import { Player, GameState, createEmptyGame } from './model2'
 import moment from 'moment';
 import { setupOIDC } from './auth'
 import session from 'express-session'
 import passport from 'passport'
 import cors from 'cors'
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './graphql';
+// import { typeDefs, resolvers } from './graphql';
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017';
@@ -37,13 +37,13 @@ app.use(cors({
 }))
 
 
-// Apollo setup
-const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ req, res }) => ({ req, res, db }) // Include db here if your resolvers need it
-});
-apolloServer.applyMiddleware({ app, path: '/graphql' });
+// // Apollo setup
+// const apolloServer = new ApolloServer({
+//     typeDefs,
+//     resolvers,
+//     context: ({ req, res }) => ({ req, res, db }) // Include db here if your resolvers need it
+// });
+// apolloServer.applyMiddleware({ app, path: '/graphql' });
   
 
 //session setup for passport

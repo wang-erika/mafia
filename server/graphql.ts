@@ -54,23 +54,23 @@ export const typeDefs = gql`
 `;
 
 
-export const resolvers = {
-    Query: {
-      gameState: async (_, __, { db }) => {
-        // Fetch the current game state
-        return await db.collection('GameState').findOne({});
-      }
-    },
-    Mutation: {
-      startGame: async (_, { playerInput }, { db }) => {
-        const gameState = await db.collection('GameState').findOne({});
-        if (gameState) {
-          // Assuming startGame modifies gameState in some way
-          startGame(gameState, playerInput);
-          await db.collection('GameState').updateOne({}, { $set: gameState });
-          return gameState;
-        }
-        throw new Error('No game to start');
-      }
-    }
-  };
+// export const resolvers = {
+//     Query: {
+//       gameState: async (_, __, { db }) => {
+//         // Fetch the current game state
+//         return await db.collection('GameState').findOne({});
+//       }
+//     },
+//     Mutation: {
+//       startGame: async (_, { playerInput }, { db }) => {
+//         const gameState = await db.collection('GameState').findOne({});
+//         if (gameState) {
+//           // Assuming startGame modifies gameState in some way
+//           startGame(gameState, playerInput);
+//           await db.collection('GameState').updateOne({}, { $set: gameState });
+//           return gameState;
+//         }
+//         throw new Error('No game to start');
+//       }
+//     }
+//   };
