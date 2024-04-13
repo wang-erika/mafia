@@ -25,8 +25,8 @@ export interface Player {
 
   export interface Action { // actions that will be saved to the database
     //gameId: String;
-    playerId: String; // The ID of the player who took the action
-    targetId?: String; // The ID of the player who was targeted by the action, if applicable
+    player: Player
+    target: Player
     type: String; // The type of action, e.g., "vote", "kill"
     round: number; // The game round in which the action took place
     phase: GamePhase;
@@ -36,12 +36,12 @@ export interface Player {
   // Functions
 
   // get players name and status and returns in an array
-  export function getPlayerListAndStatus(gameState: GameState): Array<{ name: String, status: Status }> {
-    return gameState.players.map(player => ({
-      name: player.name,
-      status: player.status
-    }));
-  }
+  // export function getPlayerListAndStatus(gameState: GameState): Array<{ name: String, status: Status }> {
+  //   return gameState.players.map(player => ({
+  //     name: player.name,
+  //     status: player.status
+  //   }));
+  // }
 
   export function createEmptyGame(player: Player): GameState {
     return {
