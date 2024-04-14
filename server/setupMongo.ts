@@ -1,6 +1,5 @@
 import { MongoClient} from 'mongodb'
-import { Message } from './data'
-import {GameState} from './model2'
+import { Message, GameState } from './data'
 
 
 // Connection URL and database name
@@ -39,13 +38,23 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
                 name: 'Cynthia',
                 role: 'Villager',
                 status: 'Alive',
-                votes: [] // Array of player Ids that this player has voted for
+                votes: [], // Array of player Ids that this player has voted for,
+                killVote:[],
             }
         ],
-        hostId: '0', // Identifier of the game host
         round: 0,
         phase: 'night'
     }
+
+//     // Database connection function
+// export async function connectToDatabase() {
+//     const client = new MongoClient('mongodb://localhost:27017');
+//     await client.connect();
+//     console.log('Connected successfully to MongoDB')
+
+//     const db = client.db("chatApp")
+//     return db
+//   }
 
 async function main() {
     await client.connect();
@@ -59,7 +68,6 @@ async function main() {
 
     // add data
     console.log("inserting messages", await db.collection("messages").insertMany(messages as any))
-
 
     // checks if game state exists.
     const existingState = await db.collection("GameState").findOne({});
