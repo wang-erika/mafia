@@ -3,21 +3,18 @@ import { MongoClient, Collection, Db, ObjectId } from 'mongodb'
 import http from 'http'
 import { Server } from 'socket.io'
 import { Message } from './data'
-import { Player, GameState, createEmptyGame } from './model2'
+import { Player, GameState, createEmptyGame, getPlayerListAndStatus } from './model2'
 import moment from 'moment';
 import { setupOIDC } from './auth'
 import session from 'express-session'
 import passport from 'passport'
 import cors from 'cors'
-import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './graphql';
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017';
 const client = new MongoClient(url);
 let db: Db;
 let messages: Collection<any>; 
-
 
 // Express setup
 const app = express();
@@ -29,19 +26,6 @@ const io = new Server(server, { //set up cors because then server can accept con
       methods: ["GET", "POST"],
     },
   });
-
-
-  // Setup Apollo Server
-const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ req, res }) => ({ db, req, res }) // Pass db and optionally req, res to resolvers
-});
-
-async function startApolloServer() {
-    await apolloServer.start();
-    apolloServer.applyMiddleware({ app, path: '/graphql' }); // Setup GraphQL endpoint
-}
 
 //setup CORS
 app.use(cors({
@@ -74,6 +58,7 @@ app.get('/auth/callback', passport.authenticate('oidc', {
     successRedirect: 'http://localhost:8130yh',
     failureRedirect: '/login'
 }))
+
 
 
 app.use(express.json());
@@ -127,44 +112,39 @@ client.connect().then(() => {
     messages = db.collection('messages');
 
     //oidc setup
-    startApolloServer().then(() => {
-        console.log("started apollo server");
-        console.log(`GraphQL ready at http://localhost:${PORT}/graphql`);
-        setupOIDC().then(() => {
-            
-            io.on('connection', (socket) => {
-                console.log('New client connected');
-
-                socket.on('disconnect', () => {
-                    console.log('Client disconnected');
-                });
-
-                socket.on('sendMessage', async ({ msg, senderId }) => {
-                    console.log('Message received:', msg, 'from', senderId);
-                    const messageDocument = {
-                        senderId,
-                        text: msg,
-                        timestamp: new Date(),
-                    };
-
-                    try {
-                        const result = await messages.insertOne(messageDocument);
-                        console.log('Message saved to database with id:', result.insertedId);
-                        io.emit('messageSaved', { message: messageDocument, id: result.insertedId });
-                    } catch (error) {
-                        console.error('Failed to save message to database', error);
-                    }
-                });
+    setupOIDC().then(() => {
+        io.on('connection', (socket) => {
+            console.log('New client connected');
+        
+            socket.on('disconnect', () => {
+                console.log('Client disconnected');
             });
-        }).catch(err => {
-            console.error('OIDC setup failed: ', err)
-        })
-
-        server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+    
+            socket.on('sendMessage', async ({ msg, senderId }) => {
+                console.log('Message received:', msg, 'from', senderId);
+                const messageDocument = {
+                    senderId,
+                    text: msg,
+                    timestamp: new Date(),
+                };
+    
+                try {
+                    const result = await messages.insertOne(messageDocument);
+                    console.log('Message saved to database with id:', result.insertedId);
+                    io.emit('messageSaved', { message: messageDocument, id: result.insertedId });
+                } catch (error) {
+                    console.error('Failed to save message to database', error);
+                }
+            });
         });
-
-    }).catch(error => {
-        console.error('Failed to connect to MongoDB', error);
+    }).catch(err => {
+        console.error('OIDC setup failed: ', err)
     })
+
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+
+}).catch(error => {
+    console.error('Failed to connect to MongoDB', error);
 });
