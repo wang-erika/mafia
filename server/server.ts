@@ -9,7 +9,6 @@ import passport from 'passport';
 import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
-import { Message } from './data'; // Assuming Message type is defined here
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017';
@@ -25,21 +24,34 @@ const io = new SocketIO(server, {
 });
 
 // Setup CORS and session
-app.use(cors({ origin: "http://localhost:8130", credentials: true }));
-app.use(session({ secret: 'session-secret', resave: false, saveUninitialized: true, cookie: { secure: false } }));
+app.use(cors({
+    origin: ["http://localhost:8130", "https://studio.apollographql.com"], // Add all necessary origins
+    credentials: true
+}));
+app.use(session({
+    secret: 'session-secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Authentication routes
 app.get('/auth', passport.authenticate('oidc'));
-app.get('/auth/callback', passport.authenticate('oidc', { successRedirect: 'http://localhost:8130yh', failureRedirect: '/login' }));
+app.get('/auth/callback', passport.authenticate('oidc', {
+    successRedirect: 'http://localhost:8130yh',
+    failureRedirect: '/login'
+}));
 
 app.use(express.json());
 
-// Route for fetching message entries
+// API route for fetching message entries
 app.get('/api/entries', async (req, res) => {
     try {
-        const entries = await client.db("chatApp").collection<Message>('messages').find({}).toArray();
+        const db = client.db("chatApp");
+        const messages = db.collection('messages');
+        const entries = await messages.find({}).toArray();
         const formattedEntries = entries.map(entry => ({
             ...entry,
             timestamp: moment(entry.timestamp).format('YYYY-MM-DD HH:mm:ss')
@@ -50,15 +62,17 @@ app.get('/api/entries', async (req, res) => {
     }
 });
 
-// WebSocket handling for real-time messaging
+// WebSocket handling
 io.on('connection', (socket) => {
     console.log('New client connected');
     socket.on('disconnect', () => console.log('Client disconnected'));
     socket.on('sendMessage', async ({ senderId, text }) => {
+        const db = client.db("chatApp");
+        const messages = db.collection('messages');
         console.log('Message received:', text, 'from', senderId);
         const messageDocument = { senderId, text, timestamp: new Date() };
         try {
-            const result = await client.db("chatApp").collection<Message>('messages').insertOne(messageDocument);
+            const result = await messages.insertOne(messageDocument);
             console.log('Message saved to database with id:', result.insertedId);
             io.emit('receiveMessage', { ...messageDocument, _id: result.insertedId });
         } catch (error) {
@@ -69,17 +83,23 @@ io.on('connection', (socket) => {
 
 // Initialize Apollo Server for GraphQL
 async function startApolloServer() {
-    const apolloServer = new ApolloServer({ typeDefs, resolvers, context: () => ({ db: client.db("chatApp") }) });
+    const apolloServer = new ApolloServer({
+        typeDefs,
+        resolvers,
+        context: () => ({ db: client.db("chatApp") })
+    });
+
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app });
-    console.log(`GraphQL API available at http://localhost:${PORT}/graphql`);
+    apolloServer.applyMiddleware({ app }); // Apply middleware correctly
+    console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
 }
 
-// Connect to MongoDB and initialize server functionalities
+// Connect to MongoDB and start the server
 client.connect().then(async () => {
     console.log('Connected successfully to MongoDB');
-    await startApolloServer(); // Start Apollo Server for GraphQL
-    await setupOIDC(); // Set up OIDC for authentication
+
+    await startApolloServer(); // Initialize Apollo Server after MongoDB connection
+    await setupOIDC(); // Initialize OIDC
 
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
