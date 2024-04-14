@@ -37,12 +37,30 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+//serialize user
+passport.serializeUser((user, done) => {
+    console.log("serializeUser", user)
+    done(null, user)
+  })
+  passport.deserializeUser((user, done) => {
+    console.log("deserializeUser", user)
+    done(null, user)
+  })
+
 // Authentication routes
 app.get('/auth', passport.authenticate('oidc'));
 app.get('/auth/callback', passport.authenticate('oidc', {
-    successRedirect: 'http://localhost:8130yh',
+    successRedirect: 'http://localhost:8130',
     failureRedirect: '/login'
 }));
+// Route to check on front end
+app.get('/auth/check', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.json({ isAuthenticated: true, user: req.user})
+    } else {
+        res.json({ isAuthenticated: false })
+    }
+})
 
 app.use(express.json());
 
