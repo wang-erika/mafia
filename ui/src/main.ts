@@ -1,10 +1,11 @@
-import { createApp } from 'vue';
+import { createApp, provide, h } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-
-
 import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
+import GraphQL from './views/GraphQL.vue';
+import { DefaultApolloClient } from '@vue/apollo-composable';
+import apolloClient from './apollo-client';
 
 const routes = [
   {
@@ -14,7 +15,11 @@ const routes = [
   {
     path: "/login",
     component: LoginPage
-  }
+  },
+  { 
+    path: "/graphql", 
+    component: GraphQL 
+  },
 ];
 
 const router = createRouter({
@@ -22,10 +27,15 @@ const router = createRouter({
     routes,
   });
 
-createApp(App)
-.use(router)
-.mount('#app')
-
+const app = createApp({
+    setup() {
+      provide(DefaultApolloClient, apolloClient);
+    },
+    render: () => h(App)
+});
+  
+  app.use(router);
+  app.mount('#app');
 //router guard 
 router.beforeEach((to, from, next) => {
   fetch('/auth/check')
