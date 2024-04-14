@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, ref, Ref, reactive, onMounted } from 'vue';
-import { Message, Config } from "../../../server/data";
+import { Message } from "../../../server/data";
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
