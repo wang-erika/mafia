@@ -1,5 +1,5 @@
 import { MongoClient} from 'mongodb'
-import { Message, GameState } from './data'
+import { Message, GameState, Role } from './data'
 
 
 // Connection URL and database name
@@ -28,7 +28,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
             {
                 id: '0',
                 name: 'Erika',
-                role: 'Mafia',
+                role: Role.Mafia,
                 status: 'Alive',
                 votes: [], // Array of player Ids that this player has voted for
                 killVote: [], // Optional property to store the kill vote for Mafia players for each night
@@ -36,7 +36,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
             {
                 id: '1',
                 name: 'Cynthia',
-                role: 'Villager',
+                role: Role.Villager,
                 status: 'Alive',
                 votes: [], // Array of player Ids that this player has voted for,
                 killVote:[],

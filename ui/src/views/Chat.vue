@@ -26,6 +26,7 @@ import moment from 'moment'
 
 const newMessage = ref('')
 const messagesData = ref<Message[]>([])
+const userInfo = ref({ userId: '', name: ''})
 
 
 function formatTimestamp(timestamp: any) {
@@ -36,15 +37,15 @@ const sendChatMessage = () => {
     if (!newMessage.value.trim()){
       console.log("no work")
       return}
-    console.log(newMessage.value)
     socket.emit('sendMessage', { 
-      senderId: 'NewUser',
+      senderId: userInfo.value.name,
       text: newMessage.value
   });
   newMessage.value = ''; // Clear the input field after sending
 };
 
 onMounted(() => {
+  fetchUser();
   fetchMessages();
 
   socket.on("receiveMessage", (userNewMessage: any) => { //takes updated message and puts it into messagesData array to display
@@ -52,6 +53,22 @@ onMounted(() => {
 })
 });
 
+async function fetchUser() {
+  try {
+    const response = await fetch('/auth/check');
+    if (!response.ok) {
+      throw new Error("Failed to fetch user information")
+    }
+    const data = await response.json();
+    if (data.isAuthenticated) {
+      userInfo.value = { userId: data.user.nickname, name: data.user.name}
+    } else {
+      userInfo.value = { userId: '', name: 'Guest'}
+    }
+  } catch (error) {
+    console.error("Error fetching user information:", error)
+  }
+}
 async function fetchMessages() {
     try {
         const response = await fetch('/api/entries'); 

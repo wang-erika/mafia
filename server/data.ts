@@ -9,13 +9,32 @@ export interface Message {
 export interface Player {
     id: String;
     name: String;
-    role: String;
+    role: Role;
     status: String;
-    votes: String[]; // Array of player Ids that this player has voted for
-    killVote: String[]; // Optional property to store the kill vote for Mafia players for each night
+    votes: String[];
+    killVote: String[];
   }
-  export interface GameState {
-    players: Player[];
-    round: number;
-    phase: String;
-  }
+export interface GameState {
+  players: Player[];
+  round: number;
+  phase: String;
+}
+
+export enum Role {
+  Villager = "Villager",
+  Mafia = "Mafia",
+  Godfather = "Godfather",
+  Detective = "Detective",
+  Doctor = "Doctor"
+}
+
+const roleCounts = new Map<Role, number>([
+  [Role.Villager, 2],
+  [Role.Mafia, 2],
+  [Role.Doctor, 1],
+  [Role.Detective, 1]
+]);
+
+export function assignRole(players): Role | null {
+
+}

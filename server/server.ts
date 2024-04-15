@@ -39,21 +39,52 @@ app.use(passport.session());
 
 //serialize user
 passport.serializeUser((user, done) => {
-    console.log("serializeUser", user)
     done(null, user)
   })
   passport.deserializeUser((user, done) => {
-    console.log("deserializeUser", user)
     done(null, user)
   })
 
 // Authentication routes
 app.get('/auth', passport.authenticate('oidc'));
-app.get('/auth/callback', passport.authenticate('oidc', {
-    successRedirect: 'http://localhost:8130',
-    failureRedirect: '/login'
-}));
-// Route to check on front end
+app.get('/auth/callback', (req, res, next) => {
+    passport.authenticate('oidc', (err: any, user: any) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            return res.redirect('/login');
+        }
+        req.logIn(user, async (loginErr) => {
+            if (loginErr) {
+                return next(loginErr);
+            }
+            const db = client.db("chatApp");
+            const gameState = await db.collection("GameState").findOne({});
+            if (gameState) {
+                const isPlayerInGame = gameState.players.some((player: { id: String; }) => player.id === user.nickname);
+                if (!isPlayerInGame) {
+                    console.log("Not in game")
+                    gameState.players.push({
+                        id: user.nickname,
+                        name: user.name,
+                        role: 'Villager',
+                        status: 'Alive',
+                        votes: [],
+                        killVote: []
+                    });
+                    await db.collection("GameState").updateOne({}, { $set: { players: gameState.players } });
+                }
+            } else {
+                res.status(404).send("No game found")
+            }
+            return res.redirect('http://localhost:8130');
+        });
+    })(req, res, next);
+});
+
+
+// Route to check on front end 
 app.get('/auth/check', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({ isAuthenticated: true, user: req.user})
