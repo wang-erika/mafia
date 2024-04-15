@@ -9,6 +9,7 @@ import passport from 'passport';
 import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
+import { assignRole } from './data';
 
 // MongoDB setup
 const url = 'mongodb://127.0.0.1:27017';
@@ -64,11 +65,10 @@ app.get('/auth/callback', (req, res, next) => {
             if (gameState) {
                 const isPlayerInGame = gameState.players.some((player: { id: String; }) => player.id === user.nickname);
                 if (!isPlayerInGame) {
-                    console.log("Not in game")
                     gameState.players.push({
                         id: user.nickname,
                         name: user.name,
-                        role: 'Villager',
+                        role: assignRole(gameState.players),
                         status: 'Alive',
                         votes: [],
                         killVote: []

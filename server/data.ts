@@ -28,13 +28,26 @@ export enum Role {
   Doctor = "Doctor"
 }
 
-const roleCounts = new Map<Role, number>([
-  [Role.Villager, 2],
-  [Role.Mafia, 2],
-  [Role.Doctor, 1],
-  [Role.Detective, 1]
-]);
-
-export function assignRole(players): Role | null {
-
+export function assignRole(players: Player[]): Role | null {
+  const roleCounts = new Map<Role, number>([
+    [Role.Villager, 2],
+    [Role.Mafia, 2],
+    [Role.Doctor, 1],
+    [Role.Detective, 1]
+  ]);
+  players.forEach(player => {
+    if (player.role && roleCounts.has(player.role)) {
+      const currentCount = roleCounts.get(player.role) ?? 0;
+      roleCounts.set(player.role, Math.max(0, currentCount - 1));
+    }
+  });
+  const availableRoles: Role[] = [];
+  roleCounts.forEach((count, role) => {
+    for (let i = 0; i < count; i++) {
+      availableRoles.push(role)
+    }
+  })
+  const randomIndex = Math.floor(Math.random() * availableRoles.length);
+  const selectedRole = availableRoles[randomIndex];
+  return selectedRole;
 }

@@ -17,8 +17,7 @@ const setupOIDC = async () => {
     state: generators.state()
    }
    function verify(tokenSet: any, userInfo: any, done: (error: any, user: any) => void) {
-    console.log('userInfo', userInfo)
-    console.log('tokenSet', tokenSet)
+
     return done(null, userInfo)
   }
   passport.use('oidc', new Strategy( { client, params }, verify))
