@@ -25,7 +25,7 @@ export const typeDefs = gql`
     killVote: [String]!
   }
 `;
-// Assuming you have a specific context type for passing database access
+
 interface IContext {
   db: Db;
 }
@@ -33,7 +33,6 @@ interface IContext {
 export const resolvers = {
   Query: {
       gameState: async (_parent: any, _args: any, context: IContext) => {
-          // Assuming there's one game state object or you manage which to fetch
           return await context.db.collection('GameState').findOne({});
       }
   }

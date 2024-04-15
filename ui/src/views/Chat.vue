@@ -1,7 +1,9 @@
 <template>
   <div class="chat-container">
     <span>
-      <h3>Day Number</h3>
+        <div v-if="loading">Loading...</div>
+        <div v-if="error">{{ error.message }}</div>
+        <h1>{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
     </span>
     <ul class="messages">
       <li v-for="message in messagesData" :key="message._id.toString()">
@@ -23,6 +25,18 @@ import { Message } from "../../../server/data";
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
+import { useQuery } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
+
+const { result, loading, error } = useQuery(gql`
+    query ExampleQuery {
+        gameState {
+            phase
+            round
+        }
+    }
+
+`);
 
 const newMessage = ref('')
 const messagesData = ref<Message[]>([])
