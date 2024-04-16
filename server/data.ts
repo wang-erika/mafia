@@ -23,7 +23,6 @@ export interface GameState {
 export enum Role {
   Villager = "Villager",
   Mafia = "Mafia",
-  Godfather = "Godfather",
   Detective = "Detective",
   Doctor = "Doctor"
 }

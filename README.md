@@ -26,4 +26,15 @@ npm run dev
 npm install moment (for timestamp)
 
 
+MVP: 
+- deployment
+- E2E testing
+- one state at a time (we can add more)
+- chat component (done)
+- sidebar component
+- vote component 
+- functionality for voting 
+- mutations in graphQL, chaange player information + game state information in db
+
+
 
