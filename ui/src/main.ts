@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
-import GraphQL from './views/GraphQL.vue';
+import Sidebar from './views/Sidebar.vue';
 import { DefaultApolloClient } from '@vue/apollo-composable';
 import apolloClient from './apollo-client';
 
@@ -18,7 +18,7 @@ const routes = [
   },
   { 
     path: "/graphql", 
-    component: GraphQL 
+    component: Sidebar
   },
 ];
 

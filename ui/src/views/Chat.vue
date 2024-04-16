@@ -1,21 +1,23 @@
 <template>
-  <div class="chat-container">
-    <span>
+  <div class="main-container">
+    <Sidebar /> <!-- Sidebar on the side -->
+    <div class="chat-container"> <!-- Chat in the middle -->
+      <span>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1>{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
-    </span>
-    <ul class="messages">
-      <li v-for="message in messagesData" :key="message._id.toString()">
-  <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
-  <span class="timestamp">{{ formatTimestamp(message.timestamp) }}
-</span>
-</li>
-    </ul>
-    <form>
-      <input v-model="newMessage" placeholder="Type a message..." />
-      <button @click.prevent="sendChatMessage()">Send</button>
-    </form>
+        <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
+      </span>
+      <ul class="messages">
+        <li v-for="message in messagesData" :key="message._id.toString()">
+          <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
+          <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
+        </li>
+      </ul>
+      <form>
+        <input v-model="newMessage" placeholder="Type a message..." />
+        <button @click.prevent="sendChatMessage()">Send</button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -27,6 +29,8 @@ const socket = io('http://localhost:8131');
 import moment from 'moment'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
+import Sidebar from './Sidebar.vue';
+import { nextTick } from 'vue';
 
 const { result, loading, error } = useQuery(gql`
     query ExampleQuery {
@@ -58,13 +62,15 @@ const sendChatMessage = () => {
   newMessage.value = ''; // Clear the input field after sending
 };
 
-onMounted(() => {
-  fetchUser();
-  fetchMessages();
+onMounted(async () => {
+  await fetchUser();
+  await fetchMessages();
+  scrollToBottom(); // Scroll to bottom after messages are loaded
 
-  socket.on("receiveMessage", (userNewMessage: any) => { //takes updated message and puts it into messagesData array to display
-    messagesData.value.push(userNewMessage)
-})
+  socket.on("receiveMessage", (userNewMessage: any) => {
+    messagesData.value.push(userNewMessage);
+    scrollToBottom(); // Scroll to bottom when new messages arrive
+  });
 });
 
 async function fetchUser() {
@@ -95,15 +101,39 @@ async function fetchMessages() {
         console.error('Error fetching initial messages:', error);
     }
 }
+
+function scrollToBottom() {
+  nextTick(() => {
+    const container = document.querySelector('.messages');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+}
+
 </script>
 
-<style scoped>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+.main-container {
+  display: flex; /* Establishes a flex container */
+  height: calc(100vh - 20px); /* Adjust 20px as needed */
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
+  align-items: flex-start;
+}
+
 .chat-container {
-  max-width: 600px;
   margin: 0 auto;
-  padding: 5px;
+  padding: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  max-width: 600px;
+  width: 600px; /* Set the width of the chat container to 600px */
+  margin-left: 20px; /* Space between the sidebar and chat container */
+  overflow-y: auto; /* Allows for scrolling within the chat box */
+  /* Additional styles as needed */
 }
 
 .messages {
@@ -130,15 +160,6 @@ input {
   border: 1px solid #ccc;
   border-radius: 5px;
 }
-
-.chat-container {
-  max-width: 600px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
 .messages {
   list-style-type: none;
   padding: 0;
