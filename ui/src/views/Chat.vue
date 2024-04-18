@@ -8,7 +8,7 @@
         <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
       </span>
       <ul class="messages">
-        <li v-for="message in messagesData" :key="message._id.toString()">
+        <li v-for="message in messagesData" :key="message.senderId.toString()">
           <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
           <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
         </li>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, Ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Message } from "../../../server/data";
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');

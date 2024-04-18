@@ -1,10 +1,9 @@
-import { createApp, provide, h } from 'vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createApp, h } from 'vue';
+import { createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Sidebar from './views/Sidebar.vue';
-import { DefaultApolloClient } from '@vue/apollo-composable';
 
 
 const routes = [
@@ -39,7 +38,7 @@ const app = createApp({
 
   
 //router guard 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
   fetch('/auth/check')
     .then(res => res.json())
     .then(data => {
