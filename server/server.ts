@@ -26,15 +26,18 @@ const io = new SocketIO(server, {
 
 // Setup CORS and session
 app.use(cors({
-    origin: ["http://localhost:8130", "https://studio.apollographql.com"], // Add all necessary origins
+    origin: ["http://localhost:8130", "http://localhost:8130/graphql", "https://studio.apollographql.com"], // Add all necessary origins
     credentials: true
 }));
 app.use(session({
     secret: 'session-secret',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }
+    cookie: {
+        secure: false
+    }
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -75,13 +78,15 @@ app.get('/auth/callback', (req, res, next) => {
                     });
                     await db.collection("GameState").updateOne({}, { $set: { players: gameState.players } });
                 }
-            } else {
+            } 
+            else {
                 res.status(404).send("No game found")
             }
             return res.redirect('http://localhost:8130');
         });
     })(req, res, next);
 });
+
 
 
 // Route to check on front end 
@@ -94,6 +99,11 @@ app.get('/auth/check', (req, res) => {
 })
 
 app.use(express.json());
+
+// app.use((req, res, next) => {
+//     console.log("app.use: ", req.user, req.url, req.headers.cookie);
+//     next()
+// })
 
 // API route for fetching message entries
 app.get('/api/entries', async (req, res) => {
@@ -135,11 +145,18 @@ async function startApolloServer() {
     const apolloServer = new ApolloServer({
         typeDefs,
         resolvers,
-        context: () => ({ db: client.db("chatApp") })
+        context: ({ req }) => {
+            // console.log("Apollo Context - Session:", req.session);
+            // console.log("Apollo Context - User:", req.user);
+            return {
+                db: client.db("chatApp"),
+                user: req.user
+            };
+        },
     });
 
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app }); // Apply middleware correctly
+    apolloServer.applyMiddleware({ app, path: '/graphql', cors: false }); // Apply middleware correctly
     console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
 }
 

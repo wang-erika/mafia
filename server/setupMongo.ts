@@ -29,7 +29,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
                 id: '0',
                 name: 'Erika',
                 role: Role.Mafia,
-                status: 'Alive',
+                status: 'Dead',
                 votes: [], // Array of player Ids that this player has voted for
                 killVote: [], // Optional property to store the kill vote for Mafia players for each night
             },

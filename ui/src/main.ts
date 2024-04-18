@@ -5,7 +5,7 @@ import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Sidebar from './views/Sidebar.vue';
 import { DefaultApolloClient } from '@vue/apollo-composable';
-import apolloClient from './apollo-client';
+
 
 const routes = [
   {
@@ -28,14 +28,16 @@ const router = createRouter({
   });
 
 const app = createApp({
-    setup() {
-      provide(DefaultApolloClient, apolloClient);
-    },
+    // setup() {
+    //   provide(DefaultApolloClient, apolloClient);
+    // },
     render: () => h(App)
 });
   
   app.use(router);
   app.mount('#app');
+
+  
 //router guard 
 router.beforeEach((to, from, next) => {
   fetch('/auth/check')
