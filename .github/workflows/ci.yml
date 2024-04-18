@@ -18,8 +18,9 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # or any version you use
+        node-version: '21'
     - run: npm install
+    - run: npm run build
 
 
   ui:
@@ -33,6 +34,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # Ensure this matches your local Node.js version
+        node-version: '21'
     - run: npm install
+    - run: npm run build
 
