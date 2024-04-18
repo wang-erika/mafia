@@ -42,7 +42,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
                 killVote:[],
             }
         ],
-        round: 0,
+        round: 1,
         phase: 'night'
     }
 

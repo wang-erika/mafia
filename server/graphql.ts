@@ -10,6 +10,10 @@ export const typeDefs = gql`
     gameState: GameState
   }
 
+  type Mutation {
+    castVote(voterId: String!, voteeId: String!): GameState
+  }
+
   type GameState {
     _id: String
     round: Int
@@ -59,6 +63,35 @@ export const resolvers = {
           }
         });
       }
+
+      return gameState;
+    }
+  },
+  Mutation: {
+    castVote: async (_parent: any, { voterId, voteeId }: { voterId: string, voteeId: string }, context: IContext) => {
+      const gameState = await context.db.collection('GameState').findOne({});
+      if (!gameState) {
+        throw new Error("Game state not found");
+      }
+
+      // Find the voter and update their votes array
+      const voter = gameState.players.find((player: Player) => player.id === voterId);
+      if (!voter) {
+        throw new Error("Voter not found");
+      }
+      
+      // Add the votee's ID to the voter's votes array
+      if (voter.votes.length < gameState.round) {
+        voter.votes.push(voteeId);
+      } else {
+        throw new Error("Cannot cast more votes than the current round number");
+      }
+
+      // Update the game state in the database
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { players: gameState.players } }
+      );
 
       return gameState;
     }
