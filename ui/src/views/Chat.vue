@@ -7,12 +7,8 @@
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <h1 v-if="result && result.gameState">{{ result.gameState.phase }} Round {{ result.gameState.round }}</h1>
-        
         <div>
-          Time Remaining: 
-          <b-form-input v-model="timerDuration" debounce="500" number class="mb-2" />
-          <b-button v-if="!timeRemaining" @click="start">Start</b-button>
-          <b-button v-else @click="stop">Stop</b-button>
+          <b-button v-if="!timeRemaining" @click="startTimer">Start</b-button>
         </div>
       <div class="timer">
       Time Remaining: {{ Math.round(timeRemaining) }} ms
@@ -38,11 +34,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed } from 'vue';
-import { useStorage, useTimestamp } from '@vueuse/core'
+import { useTimestamp, } from '@vueuse/core'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
-import { useQuery } from '@vue/apollo-composable'
+import { useQuery, useMutation} from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import Vote from './Vote.vue';
@@ -52,10 +48,19 @@ const { result, loading, error } = useQuery(gql`
         gameState {
             phase
             round
+            startTime
         }
     }
 
 `);
+
+const { mutate: setStartTime } = useMutation(gql`
+    mutation SetStartTime($time: String!) {
+        setStartTime(time: $time) {
+            startTime
+        }
+    }
+`, {});
 
 interface Message {
     senderId: string;
@@ -83,19 +88,19 @@ const sendChatMessage = () => {
 };
 
 //* TIMER  */
-const startTimestamp = useStorage('start-timestamp', 0)
-const timerDuration = ref(30000)
-const timeRemaining = computed(() => startTimestamp.value ? Math.max(0, startTimestamp.value + timerDuration.value - now.value) : 0)
 const now = useTimestamp({ interval: 200 })
+const startTime = ref(null);
+const timeRemaining = computed(() => {
+  return startTime.value ? Math.max(0, new Date(startTime.value).getTime() + 30000 - new Date(now.value).getTime()) : 0;
+});
 
-
-function start() { //temporary for now (should connect to start button from config page)
-	startTimestamp.value = Date.now()
+function startTimer() {
+  const start = new Date();
+  setStartTime({ time: start.toISOString() }).then(() => {
+    startTime.value = start.toISOString();
+  });
 }
 
-function stop() {
-	startTimestamp.value = 0
-}
 //* TIMER  */
 
 

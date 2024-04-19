@@ -141,7 +141,19 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       }
       
       return await context.db.collection('GameState').findOne({});
+    }
 
+async function setStartTime(_parent: any, { time }: { time: string }, context: IContext) {
+  const gameState = await context.db.collection('GameState').findOne({});
+  if (!gameState) {
+    throw new Error("Game state not found");
+  }
+  await context.db.collection('GameState').updateOne(
+    { _id: gameState._id },
+    { $set: { startTime: time } }
+  );
+  return await context.db.collection('GameState').findOne({});
 }
 
-export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState };
+
+export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, setStartTime };
