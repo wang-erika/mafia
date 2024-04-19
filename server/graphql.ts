@@ -8,6 +8,7 @@ import { Player } from './data';
 export const typeDefs = gql`
   type Query {
     gameState: GameState
+    currentUser: String
   }
 
   type Mutation {
@@ -39,6 +40,15 @@ interface IContext {
 
 export const resolvers = {
   Query: {
+    currentUser: (_parent: any, _args: any, context: IContext) => {
+      // Simply return the user from the context if it exists
+      if(context.user){
+        return context.user.nickname
+      }
+      else{
+        return null
+      }
+    },
     gameState: async (_parent: any, _args: any, context: IContext) => {
       const gameState = await context.db.collection('GameState').findOne({});
       if (!gameState) {
@@ -84,7 +94,7 @@ export const resolvers = {
       if (voter.votes.length < gameState.round) {
         voter.votes.push(voteeId);
       } else {
-        throw new Error("Cannot cast more votes than the current round number");
+        throw new Error("You have already voted this round.");
       }
 
       // Update the game state in the database

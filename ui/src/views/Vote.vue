@@ -1,8 +1,12 @@
 <template>
     <div>
+        <div>
+            <h1 v-if="userResult"> Hello, {{ userResult.currentUser }}</h1>
+        </div>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
+            <div v-if="voteError">{{ voteError }}</div> <!-- Display vote-related errors -->
             <h1>Vote</h1>
             <form @submit.prevent="castVote" class="vote-form">
                 <table>
@@ -34,7 +38,7 @@
 
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
@@ -56,13 +60,21 @@ export default defineComponent({
               round
           }
       }
-    `);
+    `)
+
+    const { result: userResult } = useQuery(gql`
+      query getUser {
+        currentUser
+      }
+    `)
+
+    const voteError = ref(''); // Reactive property for storing vote errors
+
     const selectedVote = ref('');
 
     const alivePlayers = computed(() => {
       return result.value?.gameState.players.filter(player => player.status === 'Alive') || [];
-    });
-
+    })
 
     const { mutate: castVoteMutation } = useMutation(gql`
       mutation CastVote($voterId: String!, $voteeId: String!) {
@@ -76,15 +88,19 @@ export default defineComponent({
       }
     `, () => ({
         variables: {
-            voterId: "ew184",
+            voterId: userResult.value.currentUser,
             voteeId: selectedVote.value
         },
     }))
 
     const castVote = async () => {
-        console.log(selectedVote)
       if (selectedVote.value != null && selectedVote.value != "") {
-        await castVoteMutation();
+        try{
+            await castVoteMutation();
+        }
+        catch (e) {
+          voteError.value = e.message; // Catch and display the error if the mutation fails
+        }
       }
     };
 
@@ -94,6 +110,8 @@ export default defineComponent({
       error,
       selectedVote,
       alivePlayers,
+      userResult,
+      voteError,
       castVote,
     };
   }
