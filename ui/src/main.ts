@@ -4,6 +4,7 @@ import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Vote from './views/Vote.vue'
+import GameLobby from './views/GameLobby.vue'
 
 const routes = [
   {
@@ -18,6 +19,10 @@ const routes = [
     path: "/graphql", 
     component: Vote
   },
+  {
+    path: "/lobby",
+    component: GameLobby
+  }
 ];
 
 const router = createRouter({

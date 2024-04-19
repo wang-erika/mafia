@@ -15,6 +15,8 @@ export const typeDefs = gql`
     castVote(voterId: String!, voteeId: String!): GameState
     nextRoundOrPhase: GameState
     mafiaCastVote(voterId: String!, voteeId: String!): GameState
+    createGame: GameState
+    addPlayerToGame(playerId: String!): GameState
   }
 
   type GameState {
@@ -178,7 +180,47 @@ export const resolvers = {
       }
       
       return await context.db.collection('GameState').findOne({});
-    }
+    },
 
+    createGame: async (_parent: any, _args: any, context: any) => {
+      const newGame = {
+        round: 0,
+        phase: 'day',
+        players: [] as Player[]
+      };
+      const result = await context.db.collection('GameState').insertOne(newGame);
+      return await context.db.collection('GameState').findOne({_id: result.insertedId});
+    
+    },
+
+    addPlayerToGame: async (_parent: any, { playerId}: {playerId: String}, context: any) => {
+      const gameState = await context.db.collection('GameState').findOne({})
+      if (!gameState) {
+        throw new Error("Game not found");
+      }
+    
+      const playerExists = gameState.players.some((player: Player) => player.id === playerId);
+      if (playerExists) {
+        return gameState
+      }
+    
+      const newPlayer = {
+        id: playerId,
+        name: "test",
+        role: "?",
+        status: "Alive",
+        votes: [] as String[],
+        killVote: [] as String[]
+      };
+    
+      gameState.players.push(newPlayer);
+    
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { players: gameState.players } }
+      );
+    
+      return gameState;
+    }
   }
 };
