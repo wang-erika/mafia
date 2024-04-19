@@ -12,7 +12,7 @@ import { setupOIDC } from './auth';
 import { assignRole } from './data';
 
 // MongoDB setup
-const url = 'mongodb://127.0.0.1:27017';
+const url = process.env.MONGO_URL || 'mongodb://db:27017';
 const client = new MongoClient(url);
 const app = express();
 const PORT = parseInt(process.env.PORT) || 8131;
@@ -50,8 +50,10 @@ passport.serializeUser((user, done) => {
   })
 
 // Authentication routes
-app.get('/auth', passport.authenticate('oidc'));
-app.get('/auth/callback', (req, res, next) => {
+app.get('/api/auth', passport.authenticate('oidc'));
+/*
+app.get('/api/callback', (req, res, next) => {
+    console.log("Hi")
     passport.authenticate('oidc', (err: any, user: any) => {
         if (err) {
             return next(err);
@@ -86,11 +88,20 @@ app.get('/auth/callback', (req, res, next) => {
         });
     })(req, res, next);
 });
-
+*/
+app.get('/api/callback', passport.authenticate('oidc', {
+    failureRedirect: '/login',
+}), (req, res) => {
+    if (req.user) {
+        res.redirect('http://localhost:31000');
+    } else {
+        res.redirect('http://localhost:31000')
+    }
+})
 
 
 // Route to check on front end 
-app.get('/auth/check', (req, res) => {
+app.get('/api/check', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({ isAuthenticated: true, user: req.user})
     } else {

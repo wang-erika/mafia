@@ -38,7 +38,7 @@ const app = createApp({
   
 //router guard 
 router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  fetch('/auth/check')
+  fetch('/api/check')
     .then(res => res.json())
     .then(data => {
       if (data.isAuthenticated) {

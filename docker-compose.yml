@@ -1,0 +1,21 @@
+version: '3'
+services:
+  db:
+    image: mongo
+    ports:
+      - 27017:27017
+  server:
+    build: ./server
+    network_mode: "host"
+    ports:
+      - 8132:8131
+    depends_on:
+      - db
+  ui:
+    build: ./ui
+    ports:
+      - 8080:8080
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
