@@ -40,7 +40,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
-import { ApolloError } from '@apollo/client/core';
 import gql from 'graphql-tag';
 import {Player} from '../../../server/data'
 
