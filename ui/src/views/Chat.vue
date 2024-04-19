@@ -1,40 +1,50 @@
 <template>
   <div class="main-container">
-    <Sidebar /> <!-- Sidebar on the side -->
-    <div class="content-container"> <!-- Container for chat and voting -->
-      <div class="chat-container"> <!-- Chat in the middle -->
-        <span>
-          <div v-if="loading">Loading...</div>
-          <div v-if="error">{{ error.message }}</div>
-          <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
-        </span>
+    <Sidebar /> 
+
+    <div class="content-container"> 
+      <div class="chat-container"> 
+        <div v-if="loading">Loading...</div>
+        <div v-if="error">{{ error.message }}</div>
+        <h1 v-if="result && result.gameState">{{ result.gameState.phase }} Round {{ result.gameState.round }}</h1>
+        
+        <div>
+          Time Remaining: 
+          <b-form-input v-model="timerDuration" debounce="500" number class="mb-2" />
+          <b-button v-if="!timeRemaining" @click="start">Start</b-button>
+          <b-button v-else @click="stop">Stop</b-button>
+        </div>
+      <div class="timer">
+      Time Remaining: {{ Math.round(timeRemaining) }} ms
+      </div>
         <ul class="messages">
           <li v-for="message in messagesData" :key="message.senderId.toString()">
             <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
             <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
           </li>
         </ul>
-        <form>
-          <input v-model="newMessage" placeholder="Type a message..." />
-          <button @click.prevent="sendChatMessage()">Send</button>
+        <form @submit.prevent="sendChatMessage">
+          <b-form-input v-model="newMessage" placeholder="Type a message..." />
+          <b-button type="submit">Send</b-button>
         </form>
       </div>
-    </div>
-    <div class = "vote-container">
-      <Vote/>
+      <div class="vote-container">
+        <Vote/>
+      </div>
     </div>
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
+import { useStorage, useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
-import { nextTick } from 'vue';
 import Vote from './Vote.vue';
 
 const { result, loading, error } = useQuery(gql`
@@ -64,14 +74,30 @@ function formatTimestamp(timestamp: any) {
 
 const sendChatMessage = () => { 
     if (!newMessage.value.trim()){
-      console.log("no work")
       return}
     socket.emit('sendMessage', { 
       senderId: userInfo.value.name,
       text: newMessage.value
   });
-  newMessage.value = ''; // Clear the input field after sending
+  newMessage.value = ''; 
 };
+
+//* TIMER  */
+const startTimestamp = useStorage('start-timestamp', 0)
+const timerDuration = ref(30000)
+const timeRemaining = computed(() => startTimestamp.value ? Math.max(0, startTimestamp.value + timerDuration.value - now.value) : 0)
+const now = useTimestamp({ interval: 200 })
+
+
+function start() { //temporary for now (should connect to start button from config page)
+	startTimestamp.value = Date.now()
+}
+
+function stop() {
+	startTimestamp.value = 0
+}
+//* TIMER  */
+
 
 onMounted(async () => {
   await fetchUser();
@@ -219,5 +245,6 @@ button {
 button:hover {
   background-color: #004494;
 }
+
 
 </style>

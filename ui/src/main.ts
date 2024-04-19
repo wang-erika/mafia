@@ -4,6 +4,9 @@ import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Vote from './views/Vote.vue'
+import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 const routes = [
   {
@@ -31,7 +34,8 @@ const app = createApp({
     // },
     render: () => h(App)
 });
-  
+  app.use(BootstrapVue as any)
+  app.use(BootstrapVueIcons as any)
   app.use(router);
   app.mount('#app');
 
