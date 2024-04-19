@@ -1,22 +1,27 @@
 <template>
   <div class="main-container">
     <Sidebar /> <!-- Sidebar on the side -->
-    <div class="chat-container"> <!-- Chat in the middle -->
-      <span>
-        <div v-if="loading">Loading...</div>
-        <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
-      </span>
-      <ul class="messages">
-        <li v-for="message in messagesData" :key="message.senderId.toString()">
-          <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
-          <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
-        </li>
-      </ul>
-      <form>
-        <input v-model="newMessage" placeholder="Type a message..." />
-        <button @click.prevent="sendChatMessage()">Send</button>
-      </form>
+    <div class="content-container"> <!-- Container for chat and voting -->
+      <div class="chat-container"> <!-- Chat in the middle -->
+        <span>
+          <div v-if="loading">Loading...</div>
+          <div v-if="error">{{ error.message }}</div>
+          <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
+        </span>
+        <ul class="messages">
+          <li v-for="message in messagesData" :key="message.senderId.toString()">
+            <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
+            <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
+          </li>
+        </ul>
+        <form>
+          <input v-model="newMessage" placeholder="Type a message..." />
+          <button @click.prevent="sendChatMessage()">Send</button>
+        </form>
+      </div>
+    </div>
+    <div class = "vote-container">
+      <Vote/>
     </div>
   </div>
 </template>
@@ -31,6 +36,7 @@ import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import { nextTick } from 'vue';
+import Vote from './Vote.vue';
 
 const { result, loading, error } = useQuery(gql`
     query ExampleQuery {
@@ -117,23 +123,27 @@ function scrollToBottom() {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 .main-container {
-  display: flex; /* Establishes a flex container */
-  height: calc(100vh - 20px); /* Adjust 20px as needed */
-  width: 100%;
+  display: flex;
   font-family: 'Roboto', sans-serif;
-  align-items: flex-start;
+}
+
+.content-container {
+  display: flex;
+  flex-grow: 1;
+  align-items: flex-start; /* Align items at the start of the flex container */
 }
 
 .chat-container {
-  margin: 0 auto;
-  padding: 20px;
+  flex-grow: 2; /* Takes twice the space of the Vote component */
+  margin-left: 20px;
+  margin-right: 20px; /* Adjust spacing as needed */
   border: 1px solid #ccc;
   border-radius: 5px;
-  max-width: 600px;
-  width: 600px; /* Set the width of the chat container to 600px */
-  margin-left: 20px; /* Space between the sidebar and chat container */
-  overflow-y: auto; /* Allows for scrolling within the chat box */
-  /* Additional styles as needed */
+  padding: 20px;
+}
+
+.vote-container {
+  width: 30%
 }
 
 .messages {

@@ -1,8 +1,5 @@
 <template>
     <div>
-        <div>
-            <h1 v-if="userResult"> Hello, {{ userResult.currentUser }}</h1>
-        </div>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
@@ -122,10 +119,10 @@ export default defineComponent({
 
 <style scoped>
 .table-container {
-    border: 2px solid #ccc;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     padding: 20px;
-    margin-top: 20px;
-    background-color: #fff;
+    background-color: #f5f5f5;
 }
 
 .vote-form {

@@ -65,22 +65,18 @@ export default defineComponent({
 
 <style scoped>
 .sidebar {
-    width: 300px;
-    padding: 20px;
-    height: 95%; 
-    overflow-y: auto; /* Allows scrolling */
-    flex-shrink: 0;
-    background-color: #f5f5f5;
     border: 1px solid #ccc;
     border-radius: 5px;
+    padding: 20px;
+    background-color: #f5f5f5;
 }
+
 
 .table-container {
     margin-top: 20px;
 }
 
 table {
-    width: 100%;
     border-collapse: collapse;
 }
 
@@ -91,7 +87,7 @@ th, td {
 }
 
 th {
-    background-color: #4CAF50;
+    background-color: #4d33e0;
     color: white;
 }
 
