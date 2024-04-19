@@ -3,7 +3,7 @@ import http from 'http';
 import { MongoClient, Collection, Db } from 'mongodb';
 import { Server as SocketIO } from 'socket.io';
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './graphql'; // Import your GraphQL definitions
+import { typeDefs, resolvers } from './GraphQL/graphql'; // Import your GraphQL definitions
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';

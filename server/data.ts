@@ -12,10 +12,12 @@ export interface Player {
     votes: String[];
     killVote: String[];
   }
+
 export interface GameState {
   players: Player[];
   round: number;
   phase: String;
+  hostId: String;
 }
 
 export enum Role {

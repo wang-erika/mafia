@@ -43,7 +43,8 @@ export const gameState: GameState =
             }
         ],
         round: 1,
-        phase: 'night'
+        phase: 'night',
+        hostId: "",
     }
 
 //     // Database connection function
