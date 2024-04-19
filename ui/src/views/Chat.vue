@@ -28,7 +28,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Message } from "../../../server/data";
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
@@ -47,6 +46,12 @@ const { result, loading, error } = useQuery(gql`
     }
 
 `);
+
+interface Message {
+    senderId: string;
+    text: string;
+    timestamp: Date;
+}
 
 const newMessage = ref('')
 const messagesData = ref<Message[]>([])

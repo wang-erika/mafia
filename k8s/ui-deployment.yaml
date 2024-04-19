@@ -15,7 +15,7 @@ spec:
         app: ui
     spec:
       containers:
-      - image: jaewonj/mafia-ui
+      - image: mafia-ui
         name: ui
         imagePullPolicy: Never
         ports:

@@ -15,7 +15,7 @@ spec:
         app: server
     spec:
       containers:
-      - image: jaewonj/mafia-server
+      - image: mafia-server
         name: server
         imagePullPolicy: IfNotPresent
         ports:

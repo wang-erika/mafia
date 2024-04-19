@@ -38,7 +38,6 @@
 import { defineComponent, ref, computed } from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-import {Player} from '../../../server/data'
 
 export default defineComponent({
   setup() {
@@ -65,6 +64,21 @@ export default defineComponent({
         currentUser
       }
     `)
+
+    interface Player {
+        id: String;
+        name: String;
+        role: Role;
+        status: String;
+        votes: String[];
+        killVote: String[];
+    }
+    enum Role {
+        Villager = "Villager",
+        Mafia = "Mafia",
+        Detective = "Detective",
+        Doctor = "Doctor"
+    }
 
     const voteError = ref(''); // Reactive property for storing vote errors
 
