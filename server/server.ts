@@ -17,18 +17,28 @@ const client = new MongoClient(url);
 const app = express();
 const PORT = parseInt(process.env.PORT) || 8131;
 const server = http.createServer(app);
+const mode = process.env.ENV_MODE;
+let uiPort: number;
+if (mode === 'production') {
+    uiPort = 31000;
+} else {
+    uiPort = 8130;
+}
 const io = new SocketIO(server, {
     cors: {
-        origin: "http://localhost:8130",
+        origin: `http://localhost:${uiPort}`,
         methods: ["GET", "POST"],
     },
 });
 
+const corsOptions = {
+    origin: ["http://localhost:31000", "http://localhost:8130", "https://studio.apollographql.com"],
+    credentials: true,
+    methods: ['POST', 'GET', 'OPTIONS']
+};
+
 // Setup CORS and session
-app.use(cors({
-    origin: ["http://localhost:8130", "http://localhost:8130/graphql", "https://studio.apollographql.com"], // Add all necessary origins
-    credentials: true
-}));
+app.use(cors(corsOptions))
 app.use(session({
     secret: 'session-secret',
     resave: false,
@@ -92,7 +102,7 @@ app.get('/api/callback', (req, res, next) => {
 app.get('/api/callback', passport.authenticate('oidc', {
     failureRedirect: '/login',
 }), (req, res) => {
-    res.redirect('http://localhost:31000')
+    res.redirect(`http://localhost:${uiPort}`)
 })
 
 
@@ -163,7 +173,7 @@ async function startApolloServer() {
     });
 
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app, path: '/graphql', cors: false }); // Apply middleware correctly
+    apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions }); // Apply middleware correctly
     console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
 }
 

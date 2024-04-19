@@ -23,7 +23,6 @@ spec:
           name: server
         env:
         - name: MONGO_URL
-          value: mongodb://db:27017/chatApp
+          value: mongodb://db
         - name: ENV_MODE
-          value: production 
-
+          value: production

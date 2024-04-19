@@ -86,7 +86,7 @@ onMounted(async () => {
 
 async function fetchUser() {
   try {
-    const response = await fetch('/auth/check');
+    const response = await fetch('/api/check');
     if (!response.ok) {
       throw new Error("Failed to fetch user information")
     }

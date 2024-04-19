@@ -3,11 +3,11 @@ import { Message, GameState, Role } from './data'
 
 
 // Connection URL and database name
-const url = 'mongodb://127.0.0.1:27017'
+const url = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017'
 const client = new MongoClient(url)
 
 // Example messages data
-const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Message type requires _id
+export const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Message type requires _id
     {
         senderId: 'user0',
         text: 'test0!',
@@ -21,7 +21,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
 ]
 
 
-  const GameState: GameState =
+export const gameState: GameState =
     {
         players: 
         [
@@ -56,7 +56,7 @@ const messages: Omit<Message, '_id'>[] = [ // Use Omit utility type if the Messa
 //     return db
 //   }
 
-async function main() {
+export async function main() {
     await client.connect();
     console.log('Connected successfully to MongoDB')
 
@@ -77,7 +77,7 @@ async function main() {
     }
     else {
         // Insert new game state as it doesn't exist
-        await db.collection("GameState").insertOne(GameState);
+        await db.collection("GameState").insertOne(gameState);
     }
 
 
