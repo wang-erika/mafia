@@ -14,6 +14,7 @@ export const typeDefs = gql`
   type Mutation {
     castVote(voterId: String!, voteeId: String!): GameState
     nextRoundOrPhase: GameState
+    mafiaCastVote(voterId: String!, voteeId: String!): GameState
   }
 
   type GameState {
@@ -85,6 +86,10 @@ export const resolvers = {
         throw new Error("Game state not found");
       }
 
+      if(gameState.phase != "day"){
+        throw new Error("Cannot vote during night.");
+      }
+
       // Find the voter and update their votes array
       const voter = gameState.players.find((player: Player) => player.id === voterId);
       if (!voter) {
@@ -106,6 +111,43 @@ export const resolvers = {
 
       return gameState;
     },
+
+    mafiaCastVote: async (_parent: any, { voterId, voteeId }: { voterId: string, voteeId: string }, context: IContext) => {
+      const gameState = await context.db.collection('GameState').findOne({});
+      if (!gameState) {
+        throw new Error("Game state not found");
+      }
+
+      if(gameState.phase != "night"){
+        throw new Error("Cannot cast mafia votes during the day.");
+      }
+
+
+      // Find the voter and update their votes array
+      const voter = gameState.players.find((player: Player) => player.id === voterId);
+      if (!voter) {
+        throw new Error("Voter not found");
+      }
+      if(voter.role != "Mafia"){
+        throw new Error("Only Mafia can vote at night.")
+      }
+      
+      // Add the votee's ID to the voter's votes array
+      if (voter.killVote.length < gameState.round) {
+        voter.killVote.push(voteeId);
+      } else {
+        throw new Error("You have already voted this round.");
+      }
+
+      // Update the game state in the database
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { players: gameState.players } }
+      );
+
+      return gameState;
+    },
+
 
     nextRoundOrPhase: async (_parent: any, { voterId, voteeId }: { voterId: string, voteeId: string }, context: IContext) => {
       const gameState = await context.db.collection('GameState').findOne({});
@@ -135,7 +177,7 @@ export const resolvers = {
         );
       }
       
-      return gameState;
+      return await context.db.collection('GameState').findOne({});
     }
 
   }

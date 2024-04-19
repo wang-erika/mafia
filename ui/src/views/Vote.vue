@@ -3,7 +3,8 @@
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
-            <div v-if="voteError">{{ voteError }}</div> <!-- Display vote-related errors -->
+            <div v-if="voteError">{{ voteError }}</div>
+            <div v-if="message">{{ message }}</div>
             <h1>Vote</h1>
             <form @submit.prevent="castVote" class="vote-form">
                 <table>
@@ -13,6 +14,15 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <td>No Vote</td>
+                            <td>
+                                <label class="custom-radio">
+                                    <input type="radio" value="" v-model="selectedVote">
+                                    <span class="radio-box"></span>
+                                </label>
+                            </td>
+                        </tr>
                         <tr v-for="player in alivePlayers" :key="player.id">
                             <td>{{ player.name }}</td>
                             <td>
@@ -24,7 +34,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <button type="submit" :disabled="!selectedVote" class="submit-btn">Submit Vote</button>
+                <button type="submit" :disabled="selectedVote === null" class="submit-btn">Submit Vote</button>
             </form>
         </div>
         <div v-else>
@@ -32,6 +42,7 @@
         </div>
     </div>
 </template>
+
 
 
 <script lang="ts">
@@ -84,6 +95,8 @@ export default defineComponent({
 
     const selectedVote = ref('');
 
+    const message = ref('');
+
     const alivePlayers = computed(() => {
       return result.value?.gameState.players.filter((player: Player) => player.status === 'Alive') || [];
     })
@@ -105,16 +118,25 @@ export default defineComponent({
         },
     }))
 
+
+
+
+
+    // In your castVote method:
     const castVote = async () => {
-      if (selectedVote.value != null && selectedVote.value != "") {
-        try{
-            await castVoteMutation();
+        if (selectedVote.value != null) { // This allows the empty string to be a valid choice
+            try {
+                await castVoteMutation();
+                selectedVote.value = '';
+                message.value = "Vote successfully cast!";
+            } catch (e: any) {
+                voteError.value = e.message; // Display any errors from the mutation
+                selectedVote.value = ''; // Reset the vote selection
+                message.value = ""
+            }
         }
-        catch (e: any) {
-          voteError.value = e.message; // Catch and display the error if the mutation fails
-        }
-      }
     };
+
 
     return {
       result,
@@ -124,6 +146,7 @@ export default defineComponent({
       alivePlayers,
       userResult,
       voteError,
+      message,
       castVote,
     };
   }
