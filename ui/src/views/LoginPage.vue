@@ -2,7 +2,7 @@
     <div class="login-container">
       <h1>Mafia Game</h1>
       <div class="login-form">
-        <a href = "http://localhost:31001/api/auth" class = 'login-button'>Sign In
+        <a href = "api/auth" class = 'login-button'>Sign In
         </a>
       </div>
     </div>

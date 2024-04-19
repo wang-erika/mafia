@@ -12,7 +12,7 @@ import { setupOIDC } from './auth';
 import { assignRole } from './data';
 
 // MongoDB setup
-const url = process.env.MONGO_URL || 'mongodb://db:27017';
+const url = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017';
 const client = new MongoClient(url);
 const app = express();
 const PORT = parseInt(process.env.PORT) || 8131;
@@ -92,11 +92,7 @@ app.get('/api/callback', (req, res, next) => {
 app.get('/api/callback', passport.authenticate('oidc', {
     failureRedirect: '/login',
 }), (req, res) => {
-    if (req.user) {
-        res.redirect('http://localhost:31000');
-    } else {
-        res.redirect('http://localhost:31000')
-    }
+    res.redirect('http://localhost:31000')
 })
 
 
