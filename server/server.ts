@@ -32,9 +32,8 @@ const io = new SocketIO(server, {
 });
 
 const corsOptions = {
-    origin: ["http://localhost:31000", "http://localhost:8130", "https://studio.apollographql.com"],
-    credentials: true,
-    methods: ['POST', 'GET', 'OPTIONS']
+    origin: ["http://localhost:31000", "http://localhost:8130", "http://localhost:8130/graphql", "https://studio.apollographql.com"],
+    credentials: true
 };
 
 // Setup CORS and session
@@ -173,7 +172,7 @@ async function startApolloServer() {
     });
 
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions }); // Apply middleware correctly
+    apolloServer.applyMiddleware({ app, path: '/graphql', cors: false }); // Apply middleware correctly
     console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
 }
 
