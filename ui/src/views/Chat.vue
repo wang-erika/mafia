@@ -9,7 +9,7 @@
           <h1 v-if="result && result.gameState">{{ result.gameState.phase }} {{ result.gameState.round }}</h1>
         </span>
         <ul class="messages">
-          <li v-for="message in messagesData" :key="message._id.toString()">
+          <li v-for="message in messagesData" :key="message.senderId.toString()">
             <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
             <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
           </li>

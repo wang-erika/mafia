@@ -12,7 +12,6 @@ Extras:
 ▪ CI/CD pipeline (to be discussed later in the course)
 ▪ Admin user role and role-based access control (RBAC) for non-admins
 ▪ GraphQL-based API (requires some self study)
-▪ Scale out Socket.IO server layer (requires some self study)
 
 
 Running: 
