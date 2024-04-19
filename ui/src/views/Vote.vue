@@ -38,9 +38,11 @@
 
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
+import { ApolloError } from '@apollo/client/core';
 import gql from 'graphql-tag';
+import {Player} from '../../../server/data'
 
 export default defineComponent({
   setup() {
@@ -73,7 +75,7 @@ export default defineComponent({
     const selectedVote = ref('');
 
     const alivePlayers = computed(() => {
-      return result.value?.gameState.players.filter(player => player.status === 'Alive') || [];
+      return result.value?.gameState.players.filter((player: Player) => player.status === 'Alive') || [];
     })
 
     const { mutate: castVoteMutation } = useMutation(gql`
@@ -98,7 +100,7 @@ export default defineComponent({
         try{
             await castVoteMutation();
         }
-        catch (e) {
+        catch (e: any) {
           voteError.value = e.message; // Catch and display the error if the mutation fails
         }
       }
