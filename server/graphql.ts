@@ -13,6 +13,7 @@ export const typeDefs = gql`
 
   type Mutation {
     castVote(voterId: String!, voteeId: String!): GameState
+    nextRoundOrPhase: GameState
   }
 
   type GameState {
@@ -104,6 +105,38 @@ export const resolvers = {
       );
 
       return gameState;
+    },
+
+    nextRoundOrPhase: async (_parent: any, { voterId, voteeId }: { voterId: string, voteeId: string }, context: IContext) => {
+      const gameState = await context.db.collection('GameState').findOne({});
+      if (!gameState) {
+        throw new Error("Game state not found");
+      }
+
+      if(gameState.phase === 'day'){
+        await context.db.collection('GameState').updateOne(
+          { _id: gameState._id },
+          { $set: { round: gameState.round + 1, phase: 'night'} },  
+        );
+      }
+
+      
+      else if (gameState.phase === 'night'){
+        await context.db.collection('GameState').updateOne(
+          { _id: gameState._id },
+          { $set: { phase: 'day'} },  
+        );
+      }
+
+      else if (gameState.phase === 'pre-game'){
+        await context.db.collection('GameState').updateOne(
+          { _id: gameState._id },
+          { $set: { round: 1, phase: 'night'} },  
+        );
+      }
+      
+      return gameState;
     }
+
   }
 };
