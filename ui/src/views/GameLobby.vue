@@ -26,7 +26,7 @@
 
   
   <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent} from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
@@ -108,7 +108,7 @@ export default defineComponent({
     // Method to add a player to a game
     const handleAddPlayer = async ( playerId: any) => {
       try {
-        const response = await addPlayerToGame({ variables: {playerId } });
+        const response = await addPlayerToGame();
         console.log('Player added:', response);
         window.location.href = '/'
       } catch (err) {
