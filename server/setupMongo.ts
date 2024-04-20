@@ -45,6 +45,7 @@ export const gameState: GameState =
         round: 1,
         phase: 'night',
         hostId: "",
+        startTime: new Date().toISOString()
     }
 
 //     // Database connection function
