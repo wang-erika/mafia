@@ -5,6 +5,7 @@ import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Vote from './views/Vote.vue'
 import GameLobby from './views/GameLobby.vue'
+import SettingsForm from './views/SettingsForm.vue'
 import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -25,6 +26,10 @@ const routes = [
   {
     path: "/lobby",
     component: GameLobby
+  },
+  {
+    path: '/settings',
+    component: SettingsForm
   }
 ];
 

@@ -24,7 +24,7 @@
             </table>
         </div>
         <div v-else>
-            No players data available.
+            No current game. <a href = '/lobby'>Click here</a> to start a new game
         </div>
     </div>
 </template>
