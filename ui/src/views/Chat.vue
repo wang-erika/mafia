@@ -1,18 +1,18 @@
 <template>
   <div class="main-container">
-    <Sidebar /> 
+    <Sidebar />
 
     <div class="content-container"> 
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="result && result.gameState">{{ result.gameState.phase }} Round {{ result.gameState.round }}</h1>
+        <h1 v-if="gameState">{{ gameState.phase }} Round {{ gameState.round }}</h1>
         <div>
-          <b-button v-if="!timeRemaining" @click="startTimer">Start</b-button>
+          <b-button v-if="!timeRemaining" @click="start">Start</b-button>
         </div>
-      <div class="timer">
-      Time Remaining: {{ Math.round(timeRemaining) }} ms
-      </div>
+        <div class="timer">
+          Time Remaining: {{ Math.round(timeRemaining) }} ms
+        </div>
         <ul class="messages">
           <li v-for="message in messagesData" :key="message.senderId.toString()">
             <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>
@@ -25,84 +25,91 @@
         </form>
       </div>
       <div class="vote-container">
-        <Vote/>
+        <Vote />
       </div>
     </div>
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
-import { useTimestamp, } from '@vueuse/core'
-import { io } from "socket.io-client";
-const socket = io('http://localhost:8131');
-import moment from 'moment'
-import { useQuery, useMutation} from '@vue/apollo-composable'
-import gql from 'graphql-tag'
+import { ref, onMounted, computed, nextTick } from 'vue';
+import { useTimestamp } from '@vueuse/core';
+import { useQuery, useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
 import Sidebar from './Sidebar.vue';
 import Vote from './Vote.vue';
+import { io } from "socket.io-client";
+import moment from 'moment';
 
-const { result, loading, error } = useQuery(gql`
-    query ExampleQuery {
-        gameState {
-            phase
-            round
-            startTime
-        }
+const socket = io('http://localhost:8131');
+
+const GET_GAME_STATE = gql`
+  query GetGameState {
+    gameState {
+      phase
+      round
+      startTime
     }
+  }
+`;
 
-`);
-
-const { mutate: setStartTime } = useMutation(gql`
-    mutation SetStartTime($time: String!) {
-        setStartTime(time: $time) {
-            startTime
-        }
+const SET_START_TIME = gql`
+  mutation UpdateStartTime($time: String!) {
+    setStartTime(input: { startTime: $time }) {
+      _id
+      startTime
     }
-`, {});
+  }
+`;
+const { result, loading, error } = useQuery(GET_GAME_STATE);
+
+const { mutate: setStartTime, loading: mutationLoading, error: mutationError } = useMutation(SET_START_TIME);
+
+const gameState = computed(() => result.value?.gameState);
 
 interface Message {
-    senderId: string;
-    text: string;
-    timestamp: Date;
+  senderId: string;
+  text: string;
+  timestamp: Date;
 }
 
-const newMessage = ref('')
-const messagesData = ref<Message[]>([])
-const userInfo = ref({ userId: '', name: ''})
+const newMessage = ref('');
+const messagesData = ref<Message[]>([]);
+  const userInfo = ref({ userId: '', name: ''})
 
 
-function formatTimestamp(timestamp: any) {
-  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
-}
+const formatTimestamp = (timestamp: Date) => moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
 
-const sendChatMessage = () => { 
-    if (!newMessage.value.trim()){
-      return}
-    socket.emit('sendMessage', { 
-      senderId: userInfo.value.name,
-      text: newMessage.value
+const sendChatMessage = () => {
+  if (!newMessage.value.trim()) {
+    return;
+  }
+  socket.emit('sendMessage', {
+    senderId: 'user-id-here', // Change to actual sender ID or user info
+    text: newMessage.value
   });
-  newMessage.value = ''; 
+  newMessage.value = '';
+};
+
+//* TIMER */
+const startTime = ref<number>(0);
+const timerDuration = ref(60000);
+const now = useTimestamp({ interval: 200 });
+const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0);
+
+onMounted(async () => {
+  if (gameState.value?.startTime) {
+    startTime.value = new Date(gameState.value.startTime).getTime();
+  }
+});
+
+const start = async () => {
+  const startTimeISO = new Date().toISOString();
+  await setStartTime({ variables: { time: startTimeISO } });
+  startTime.value = new Date(startTimeISO).getTime();
 };
 
 //* TIMER  */
-const now = useTimestamp({ interval: 200 })
-const startTime = ref(null);
-const timeRemaining = computed(() => {
-  return startTime.value ? Math.max(0, new Date(startTime.value).getTime() + 30000 - new Date(now.value).getTime()) : 0;
-});
-
-function startTimer() {
-  const start = new Date();
-  setStartTime({ time: start.toISOString() }).then(() => {
-    startTime.value = start.toISOString();
-  });
-}
-
-//* TIMER  */
-
 
 onMounted(async () => {
   await fetchUser();

@@ -1,14 +1,20 @@
 // Resolvers.ts
 
 import { Player } from '../data'; // Import types as necessary
-import { Db } from 'mongodb';
+import { Db, ObjectId } from 'mongodb';
 
 interface IContext {
     db: Db;
     user: any;
   }
-  
-
+  interface UpdateStartTimeInput {
+    startTime: String;  // New startTime to be set
+}
+  interface GameState {
+    _id: ObjectId;
+    startTime: String;
+    // Add other GameState fields as needed
+}
 
 // Query
 async function currentUser(_parent: any, _args: any, context: IContext) {
@@ -143,17 +149,25 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       return await context.db.collection('GameState').findOne({});
     }
 
-async function setStartTime(_parent: any, { time }: { time: string }, context: IContext) {
-  const gameState = await context.db.collection('GameState').findOne({});
-  if (!gameState) {
-    throw new Error("Game state not found");
+    async function setStartTime(args: { startTime: string }, context: { db: Db }) {
+      const gameStateCollection = context.db.collection('GameState');
+      try {
+          const updateResult = await gameStateCollection.findOneAndUpdate(
+              { $set: { startTime: args.startTime } },
+              { returnDocument: 'after' }
+          );
+  
+          if (!updateResult.value) {
+              throw new Error("GameState not found or update failed.");
+          }
+  
+          return updateResult.value;
+      } catch (error) {
+          console.error('Error updating GameState:', error);
+          throw new Error('An error occurred during the update.');
+      }
   }
-  await context.db.collection('GameState').updateOne(
-    { _id: gameState._id },
-    { $set: { startTime: time } }
-  );
-  return await context.db.collection('GameState').findOne({});
-}
+  
 
 
 export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, setStartTime };

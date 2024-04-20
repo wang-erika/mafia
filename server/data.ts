@@ -17,6 +17,7 @@ export interface GameState {
   players: Player[];
   round: number;
   phase: String;
+  startTime:String;
   hostId: String;
 }
 
