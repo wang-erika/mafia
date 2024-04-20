@@ -2,6 +2,7 @@
 
 import { Player, GameState} from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
+import { assignRole } from '../data';
 
 interface IContext {
     db: Db;
@@ -317,10 +318,20 @@ function calculateMafiaMostVoted(gameState: any): string | null {
   }
 
 async function createGame(_parent: any, _args: any, context: IContext) {
+  const newRole = assignRole([])
+  const newHost = {
+    id: context.user.nickname,
+    name: context.user.name,
+    role: newRole,
+    status: "Alive",
+    votes: [] as String[],
+    killVote: [] as String[]
+  };
   const newGame = {
     round: 0,
     phase: 'day',
-    players: [] as Player[]
+    players: [newHost] as Player[],
+    hostId: newHost.id
   };
   const result = await context.db.collection('GameState').insertOne(newGame);
   return await context.db.collection('GameState').findOne({_id: result.insertedId});
@@ -336,11 +347,12 @@ async function addPlayerToGame(_parent: any, { playerId}: {playerId: String}, co
   if (playerExists) {
     return gameState
   }
+  const newRole = assignRole(gameState.players)
 
   const newPlayer = {
-    id: playerId,
-    name: "test",
-    role: "?",
+    id: context.user.nickname,
+    name: context.user.name,
+    role: newRole,
     status: "Alive",
     votes: [] as String[],
     killVote: [] as String[]
@@ -356,4 +368,28 @@ async function addPlayerToGame(_parent: any, { playerId}: {playerId: String}, co
   return gameState;
 }
 
-export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame };
+async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName }: { dayLength: number, nightLength: number, roomName: String}, context: IContext) {
+  const gameState = await context.db.collection('GameState').findOne({})
+  console.log(gameState)
+  if (!gameState) {
+    throw new Error("Game not found")
+  }
+  if (context.user.nickname !== gameState.hostId) {
+    throw new Error("Only the host can change game settings");
+  }
+
+  const updateDoc = {
+    dayLength: dayLength,
+    nightLength: nightLength,
+    roomName: roomName
+  };
+
+  await context.db.collection('GameState').updateOne(
+    { _id: gameState._id },
+    { $set: updateDoc }
+  );
+
+  return await context.db.collection('GameState').findOne({_id: gameState._id});
+}
+
+export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings };

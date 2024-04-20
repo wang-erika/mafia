@@ -52,7 +52,7 @@ export const gameState: GameState =
         ],
         round: 1,
         phase: 'night',
-        hostId: "",
+        hostId: "1",
     }
 
 //     // Database connection function
