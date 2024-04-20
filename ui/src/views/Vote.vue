@@ -117,7 +117,10 @@ export default defineComponent({
             voteeId: selectedVote.value
         },
     }))
-    
+
+
+
+
 
     // In your castVote method:
     const castVote = async () => {

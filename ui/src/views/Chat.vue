@@ -6,7 +6,7 @@
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="result && result.gameState">{{ result.gameState.phase }} Round {{ result.gameState.round }}</h1>
+        <h1 v-if="result && result.gameState">{{ result.gameState.phase.charAt(0).toUpperCase() + result.gameState.phase.slice(1)}} {{ result.gameState.round }} </h1>
         
         <div>
           Time Remaining: 
@@ -52,6 +52,10 @@ const { result, loading, error } = useQuery(gql`
         gameState {
             phase
             round
+            roomName
+            hostId
+            dayLength
+            nightLength
         }
     }
 
