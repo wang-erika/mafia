@@ -62,7 +62,7 @@ export function calculateMostVoted(gameState: GameState): string | null {
 export function assignRole(players: Player[]): Role | null {
   const roleCounts = new Map<Role, number>([
     [Role.Villager, 2],
-    [Role.Mafia, 2],
+    [Role.Mafia, 1],
     [Role.Doctor, 1],
     [Role.Detective, 1]
   ]);

@@ -3,7 +3,6 @@
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
-            <div v-if="voteError">{{ voteError }}</div>
             <div v-if="message">{{ message }}</div>
             <h1>Vote</h1>
             <form @submit.prevent="castVote" class="vote-form">
@@ -91,8 +90,6 @@ export default defineComponent({
         Doctor = "Doctor"
     }
 
-    const voteError = ref(''); // Reactive property for storing vote errors
-
     const selectedVote = ref('');
 
     const message = ref('');
@@ -118,21 +115,51 @@ export default defineComponent({
         },
     }))
 
-
-
+    const { mutate: castMafiaVoteMutation } = useMutation(gql`
+      mutation MafiaCastVote($voterId: String!, $voteeId: String!) {
+        mafiaCastVote(voterId: $voterId, voteeId: $voteeId) {
+              _id
+              players {
+                  id
+                  votes
+              }
+          }
+      }
+    `, () => ({
+        variables: {
+            voterId: userResult.value.currentUser,
+            voteeId: selectedVote.value
+        },
+    }))
 
 
     // In your castVote method:
     const castVote = async () => {
         if (selectedVote.value != null) { // This allows the empty string to be a valid choice
-            try {
-                await castVoteMutation();
-                selectedVote.value = '';
-                message.value = "Vote successfully cast!";
-            } catch (e: any) {
-                voteError.value = e.message; // Display any errors from the mutation
-                selectedVote.value = ''; // Reset the vote selection
-                message.value = ""
+            if (result.value.gameState.phase === "day") {
+                try {
+                    await castVoteMutation();
+                    //selectedVote.value = '';
+                    message.value = "Vote successfully cast!";
+                }
+                catch (e: any) {
+                    message.value = e.message; // Display any errors from the mutation
+                    selectedVote.value = ''; // Reset the vote selection
+                }
+            }
+            else if (result.value.gameState.phase == "night"){
+                try {
+                    await castMafiaVoteMutation();
+                    //selectedVote.value = '';
+                    message.value = "Vote successfully cast!";
+                }
+                catch (e: any) {
+                    message.value = e.message; // Display any errors from the mutation
+                    selectedVote.value = ''; // Reset the vote selection
+                }
+            }
+            else{
+                message.value = "Game is not running."
             }
         }
     };
@@ -145,7 +172,6 @@ export default defineComponent({
       selectedVote,
       alivePlayers,
       userResult,
-      voteError,
       message,
       castVote,
     };

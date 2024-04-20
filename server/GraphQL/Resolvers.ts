@@ -88,28 +88,28 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
 
   // Find the voter and ensure they are alive
   const voter = gameState.players.find((player: Player) => player.id === voterId);
-  if (!voter) {
-    throw new Error("Voter not found");
-  }
-  if (voter.status === "Dead") {
-    throw new Error("Cannot vote when dead.");
+  if (voter) {
+    if (voter.status === "Dead") {
+      throw new Error("Cannot vote when dead.");
+    }
   }
 
   // Find the votee and check their status
   const votee = gameState.players.find((player: Player) => player.id === voteeId);
-  if (!votee) {
-    throw new Error("Votee not found");
-  }
-  if (votee.status === "Dead") {
-    throw new Error("Cannot vote for a dead player.");
+  if (votee) {
+    if (votee.status === "Dead") {
+      throw new Error("Cannot vote for a dead player.");
+    }
   }
 
-  // Check if the voter has already voted this round
-  if (voter.votes.length < gameState.round) {
-    voter.votes.push(voteeId);
-  } else {
-    throw new Error("You have already voted this round.");
-  }
+    // Check if the voter has already voted this round
+    if (voter.votes.length < gameState.round) {
+      voter.votes.push(voteeId);
+    } else {
+      throw new Error("You have already voted this round.");
+    }
+  
+
 
   // Update the game state in the database
   await context.db.collection('GameState').updateOne(
@@ -148,19 +148,18 @@ async function mafiaCastVote(_parent: any, { voterId, voteeId }: { voterId: stri
 
   // Find the votee and check their status
   const votee = gameState.players.find((player: Player) => player.id === voteeId);
-  if (!votee) {
-    throw new Error("Votee not found");
-  }
-  if (votee.status === "Dead") {
-    throw new Error("Cannot vote for a dead player.");
+  if (votee) {
+    if (votee.status === "Dead") {
+      throw new Error("Cannot vote for a dead player.");
+    }
   }
 
-  // Check if the voter has already voted this round
-  if (voter.killVote.length < gameState.round) {
-    voter.killVote.push(voteeId);
-  } else {
-    throw new Error("You have already voted this round.");
-  }
+    // Check if the voter has already voted this round
+    if (voter.killVote.length < gameState.round) {
+      voter.killVote.push(voteeId);
+    } else {
+      throw new Error("You have already voted this round.");
+    }
 
   // Update the game state in the database
   await context.db.collection('GameState').updateOne(
