@@ -11,10 +11,10 @@ import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
 import { execute, subscribe } from 'graphql';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
+
 
 // graphql setup
 const schema = makeExecutableSchema({ typeDefs, resolvers });

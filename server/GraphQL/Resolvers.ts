@@ -96,12 +96,12 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
 
   // Find the voter and ensure they are alive
   const voter = gameState.players.find((player: Player) => player.id === voterId);
-  if (voter) {
-    if (voter.status === "Dead") {
-      throw new Error("Cannot vote when dead.");
-    }
+  if (!voter) {
+    throw new Error("Voter not found");
   }
-
+  if (voter.status === "Dead") {
+    throw new Error("Cannot vote when dead.");
+  }
   // Find the votee and check their status
   const votee = gameState.players.find((player: Player) => player.id === voteeId);
   if (votee) {
@@ -117,12 +117,12 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
     throw new Error("You have already voted this round.");
   }
 
-
   // Update the game state in the database
   await context.db.collection('GameState').updateOne(
     { _id: gameState._id },
     { $set: { players: gameState.players } }
   );
+
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
   //return gameState
 }
