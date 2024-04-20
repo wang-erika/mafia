@@ -59,7 +59,7 @@ export default defineComponent({
 
     const currentUserDetails = computed(() => {
       if (result.value && userResult.value) {
-        return result.value.gameState.players.find(player: any => player.id === userResult.value.currentUser) || null;
+        return result.value.gameState.players.find((player: any) => player.id === userResult.value.currentUser) || null;
       }
       return null;
     });
