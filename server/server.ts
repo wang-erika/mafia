@@ -9,6 +9,9 @@ import passport from 'passport';
 import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
+import { execute, subscribe } from 'graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 // MongoDB setup
 const url = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017';
@@ -156,23 +159,34 @@ io.on('connection', (socket) => {
 });
 
 // Initialize Apollo Server for GraphQL
-async function startApolloServer() {
-    const apolloServer = new ApolloServer({
-        typeDefs,
-        resolvers,
-        context: ({ req }) => {
-            // console.log("Apollo Context - Session:", req.session);
-            // console.log("Apollo Context - User:", req.user);
-            return {
-                db: client.db("chatApp"),
-                user: req.user
-            };
-        },
-    });
 
-    await apolloServer.start();
-    apolloServer.applyMiddleware({ app, path: '/graphql', cors: false }); // Apply middleware correctly
-    console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
+const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers
+  });
+  
+  // Initialize Apollo Server
+  const apolloServer = new ApolloServer({
+      schema,
+      context: ({ req }) => ({
+          db: client.db("chatApp"),
+          user: req.user
+      }),
+  });
+  
+async function startApolloServer() {
+    apolloServer.start().then(() => {
+        apolloServer.applyMiddleware({ app, path: '/graphql', cors: false });
+
+        const subscriptionServer = SubscriptionServer.create({
+            schema,
+            execute,
+            subscribe,
+        }, {
+            server, // This is the HTTP server we created earlier
+            path: '/graphql',
+        });
+    });
 }
 
 // Connect to MongoDB and start the server
