@@ -3,12 +3,23 @@ import http from 'http';
 import { MongoClient, Collection, Db } from 'mongodb';
 import { Server as SocketIO } from 'socket.io';
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './GraphQL/graphql'
+import { typeDefs } from './GraphQL/graphql'
+import {resolvers} from './GraphQL/Resolvers'
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
+import { execute, subscribe } from 'graphql';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client/core');
+
+
+// graphql setup
+const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 // MongoDB setup
 const url = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017';
@@ -156,10 +167,23 @@ io.on('connection', (socket) => {
 });
 
 // Initialize Apollo Server for GraphQL
+// Configure an HttpLink that includes fetch
+const httpLink = new HttpLink({
+    uri: 'http://localhost:4000/graphql', // Your GraphQL server URI
+    fetch: fetch
+  });
+  
+  // Initialize the Apollo Client
+  const apolloClient = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    // Setting the assumeImmutableResults option can help with performance in Node.js
+    assumeImmutableResults: true
+  });
+
 async function startApolloServer() {
     const apolloServer = new ApolloServer({
-        typeDefs,
-        resolvers,
+        schema,
         context: ({ req }) => {
             // console.log("Apollo Context - Session:", req.session);
             // console.log("Apollo Context - User:", req.user);
@@ -172,8 +196,23 @@ async function startApolloServer() {
 
     await apolloServer.start();
     apolloServer.applyMiddleware({ app, path: '/graphql', cors: false }); // Apply middleware correctly
+
+    // Set up WebSocket server.
+    const wsServer = new WebSocketServer({
+        server: server,
+        path: '/graphql',
+    });
+
+    useServer({
+        schema, 
+        context: async () => ({
+            db: client.db("chatApp")
+        })
+    }, wsServer);
+
     console.log(`GraphQL API available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
 }
+
 
 // Connect to MongoDB and start the server
 client.connect().then(async () => {

@@ -1,8 +1,6 @@
 // Import gql from apollo-server-express
 import { gql } from 'apollo-server-express';
 import { Db } from 'mongodb';
-import { Player } from '../data';
-import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime } from './Resolvers';
 
 
 export const typeDefs = gql`
@@ -19,7 +17,11 @@ export const typeDefs = gql`
     addPlayerToGame(playerId: String!): GameState
     updateGameSettings(dayLength: Int, nightLength: Int, roomName: String): GameState
     setStartTime(time:String!):GameState
-    
+  }
+
+  type Subscription {
+    gameStateChanged: GameState
+    startTimeUpdated : GameState
   }
 
   type GameState {
@@ -42,26 +44,6 @@ export const typeDefs = gql`
     votes: [String]!
     killVote: [String]!
   }
+
 `;
 
-interface IContext {
-  db: Db;
-  user: any;
-}
-
-
-export const resolvers = {
-  Query: {
-    currentUser,
-    gameState,
-  },
-  Mutation: {
-    castVote,
-    mafiaCastVote,
-    nextRoundOrPhase,
-    createGame,
-    addPlayerToGame,
-    updateGameSettings,
-    setStartTime
-  },
-};

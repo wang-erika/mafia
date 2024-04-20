@@ -18,6 +18,7 @@ export interface GameState {
   round: number;
   phase: "day" | "night" | "pre-game" | "end";
   hostId: string;
+  startTime: string;
 }
 
 export enum Role {
