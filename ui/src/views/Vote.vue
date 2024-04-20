@@ -51,6 +51,22 @@ import gql from 'graphql-tag';
 
 export default defineComponent({
   setup() {
+
+    interface Player {
+        id: String;
+        name: String;
+        role: Role;
+        status: String;
+        votes: String[];
+        killVote: String[];
+    }
+    enum Role {
+        Villager = "Villager",
+        Mafia = "Mafia",
+        Detective = "Detective",
+        Doctor = "Doctor"
+    }
+
     const { result, loading, error } = useQuery(gql`
       query GameStateQuery {
           gameState {
@@ -75,25 +91,8 @@ export default defineComponent({
       }
     `)
 
-    interface Player {
-        id: String;
-        name: String;
-        role: Role;
-        status: String;
-        votes: String[];
-        killVote: String[];
-    }
-    enum Role {
-        Villager = "Villager",
-        Mafia = "Mafia",
-        Detective = "Detective",
-        Doctor = "Doctor"
-    }
-
     const selectedVote = ref('');
-
     const message = ref('');
-
     const alivePlayers = computed(() => {
       return result.value?.gameState.players.filter((player: Player) => player.status === 'Alive') || [];
     })

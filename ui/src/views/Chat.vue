@@ -3,6 +3,7 @@
     <div class="vote-container">
       <InfoBox />
       <Vote/>
+      <NextPhase />
     </div>
     <div class="content-container"> 
       <div class="chat-container"> 
@@ -47,6 +48,7 @@ import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import InfoBox from './InfoBox.vue';
 import Vote from './Vote.vue';
+import NextPhase from '../components/NextPhase.vue';
 
 const GET_GAME_STATE = gql`
   query GetGameState {
