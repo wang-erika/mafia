@@ -29,7 +29,7 @@ export const gameState: GameState =
                 id: '0',
                 name: 'Erika',
                 role: Role.Mafia,
-                status: 'Dead',
+                status: 'Alive',
                 votes: [], // Array of player Ids that this player has voted for
                 killVote: [], // Optional property to store the kill vote for Mafia players for each night
             },
@@ -40,12 +40,21 @@ export const gameState: GameState =
                 status: 'Alive',
                 votes: [], // Array of player Ids that this player has voted for,
                 killVote:[],
-            }
+            },
+            {
+                id: '2',
+                name: 'Jaewon',
+                role: Role.Villager,
+                status: 'Alive',
+                votes: [], // Array of player Ids that this player has voted for
+                killVote: [], // Optional property to store the kill vote for Mafia players for each night
+            },
         ],
-        round: 1,
+        round: 0,
         phase: 'night',
-        hostId: "",
+        hostId: "1",
         startTime: new Date().toISOString()
+
     }
 
 //     // Database connection function

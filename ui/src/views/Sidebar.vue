@@ -1,8 +1,8 @@
 <template>
     <div class="sidebar">
-        <h1>Game State</h1>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
+        <h1 v-if="result">{{result.gameState.roomName }}'s Room</h1>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
             <table>
                 <thead>
@@ -24,7 +24,7 @@
             </table>
         </div>
         <div v-else>
-            No players data available.
+            No current game. <a href = '/lobby'>Click here</a> to start a new game
         </div>
     </div>
 </template>
@@ -50,6 +50,7 @@ export default defineComponent({
                   votes
               }
               round
+              roomName
           }
       }
     `);

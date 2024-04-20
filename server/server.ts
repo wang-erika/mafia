@@ -3,13 +3,12 @@ import http from 'http';
 import { MongoClient, Collection, Db } from 'mongodb';
 import { Server as SocketIO } from 'socket.io';
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './GraphQL/graphql'; // Import your GraphQL definitions
+import { typeDefs, resolvers } from './GraphQL/graphql'
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
-import { assignRole } from './data';
 
 // MongoDB setup
 const url = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017';
