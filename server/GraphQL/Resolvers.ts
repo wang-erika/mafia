@@ -402,4 +402,24 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
-export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings };
+async function setStartTime(args: { startTime: string }, context: { db: Db }) {
+  const gameStateCollection = context.db.collection('GameState');
+  try {
+      const updateResult = await gameStateCollection.findOneAndUpdate(
+          { $set: { startTime: args.startTime } },
+          { returnDocument: 'after' }
+      );
+
+      if (!updateResult.value) {
+          throw new Error("GameState not found or update failed.");
+      }
+
+      return updateResult.value;
+  } catch (error) {
+      console.error('Error updating GameState:', error);
+      throw new Error('An error occurred during the update.');
+  }
+}
+
+
+export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime };

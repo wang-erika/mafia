@@ -2,7 +2,7 @@
 import { gql } from 'apollo-server-express';
 import { Db } from 'mongodb';
 import { Player } from '../data';
-import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings } from './Resolvers';
+import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime } from './Resolvers';
 
 
 export const typeDefs = gql`
@@ -18,6 +18,8 @@ export const typeDefs = gql`
     createGame: GameState
     addPlayerToGame(playerId: String!): GameState
     updateGameSettings(dayLength: Int, nightLength: Int, roomName: String): GameState
+    setStartTime(time:String!):GameState
+    
   }
 
   type GameState {
@@ -29,6 +31,7 @@ export const typeDefs = gql`
     dayLength: Int
     nightLength: Int
     roomName: String
+    startTime: String
   }
 
   type Player {
@@ -58,6 +61,7 @@ export const resolvers = {
     nextRoundOrPhase,
     createGame,
     addPlayerToGame,
-    updateGameSettings
+    updateGameSettings,
+    setStartTime
   },
 };
