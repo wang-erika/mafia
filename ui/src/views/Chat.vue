@@ -1,7 +1,9 @@
 <template>
   <div class="main-container">
-    <Sidebar /> 
-
+    <div class="vote-container">
+      <InfoBox />
+      <Vote/>
+    </div>
     <div class="content-container"> 
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
@@ -28,10 +30,8 @@
           <b-button type="submit">Send</b-button>
         </form>
       </div>
-      <div class="vote-container">
-        <Vote/>
-      </div>
     </div>
+    <Sidebar class = "sidebar-container"/> 
   </div>
 </template>
 
@@ -45,6 +45,7 @@ import moment from 'moment'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
+import InfoBox from './InfoBox.vue';
 import Vote from './Vote.vue';
 
 const { result, loading, error } = useQuery(gql`
@@ -160,26 +161,46 @@ function scrollToBottom() {
 .main-container {
   display: flex;
   font-family: 'Roboto', sans-serif;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 2em;
+}
+.vote-container {
+  width: 25%;
+  gap: 25px;
+}
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .content-container, .chat-container, .vote-container {
+    width: 100%; /* Make each container take the full width */
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .vote-container {
+    width: 100%;
+  }
 }
 
 .content-container {
   display: flex;
   flex-grow: 1;
-  align-items: flex-start; /* Align items at the start of the flex container */
+  align-items: flex-start;
 }
 
 .chat-container {
-  flex-grow: 2; /* Takes twice the space of the Vote component */
+  flex-grow: 1.5; 
   margin-left: 20px;
-  margin-right: 20px; /* Adjust spacing as needed */
+  margin-right: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 20px;
 }
 
-.vote-container {
-  width: 30%
-}
 
 .messages {
   list-style-type: none;

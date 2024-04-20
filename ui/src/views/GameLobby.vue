@@ -1,16 +1,12 @@
 <template>
     <div class="lobby">
-        <h1>Game Lobby</h1>
+        <h1 class = "title">Welcome to Mafia!</h1>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div v-if="result && result.gameState">
         <p v-if="Number(result.gameState.round) < 1">Waiting for game to start...</p>
         <p v-if="Number(result.gameState.round) > 0">Game is ongoing.</p>
 
-        <div v-if="isAdmin">
-          Welcome, admin! <a href = '/settings'>Configure game settings here</a>
-
-        </div>
             <div v-if="result.gameState.players && result.gameState.players.length > 0">
                 <h2>Players in Lobby: </h2>
                 <ul>
@@ -19,7 +15,7 @@
                     </li>
                 </ul>
             </div>
-            <button class="button" v-if="!result.gameState.started" @click="handleAddPlayer">Join Game</button>
+            <button class="button" v-if="result.gameState.round < 1" @click="handleAddPlayer">Join Game</button>
             <button class="button" @click="handleSpectateGame">Spectate</button>
         </div>
         <div v-else>
@@ -98,9 +94,7 @@ export default defineComponent({
                 playerId: userResult.value.currentUser
             }
         }));
-    const isAdmin = computed(() => {
-      return result.value && result.value.currentUser === result.value.gameState.hostId;
-      });
+
 
     // Method to handle game creation
     const handleCreateGame = async () => {
@@ -132,7 +126,6 @@ export default defineComponent({
       handleCreateGame,
       handleAddPlayer,
       handleSpectateGame,
-      isAdmin,
       result,
       loading,
       error,
@@ -166,6 +159,9 @@ export default defineComponent({
   background-color: white;
   color: black;
   border: 2px solid #4CAF50;
+}
+.title {
+  margin: 25px;
 }
   </style>
   

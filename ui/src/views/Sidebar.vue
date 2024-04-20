@@ -2,7 +2,7 @@
     <div class="sidebar">
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1>{{result.gameState.roomName }}'s Room</h1>
+        <h1 v-if="result">{{result.gameState.roomName }}'s Room</h1>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
             <table>
                 <thead>
