@@ -7,12 +7,8 @@ import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
 setPubSub(pubsub);
-interface IContext {
-  db: Db;
-  user: any;
-}
 const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
-
+const START_TIME_UPDATED = 'START_TIME_UPDATED';
 
 
 export const typeDefs = gql`
@@ -57,4 +53,30 @@ export const typeDefs = gql`
     killVote: [String]!
   }
 
+<<<<<<< HEAD
 `;
+=======
+export const resolvers = {
+  Query: {
+    currentUser,
+    gameState,
+  },
+  Mutation: {
+    castVote,
+    mafiaCastVote,
+    nextRoundOrPhase,
+    createGame,
+    addPlayerToGame,
+    updateGameSettings,
+    setStartTime
+  },
+  Subscription: {
+    gameStateChanged: {
+      subscribe: () => pubsub.asyncIterator([GAME_STATE_CHANGED])
+    },
+    startTimeUpdated: {
+      subscribe: () => pubsub.asyncIterator([START_TIME_UPDATED])
+    }
+  },
+};
+>>>>>>> 5bcbe51c (added subscription for startTime)
