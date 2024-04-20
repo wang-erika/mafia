@@ -1,6 +1,7 @@
 // Import gql from apollo-server-express
 import { gql } from 'apollo-server-express';
 import { Db } from 'mongodb';
+import { Player } from '../data';
 import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings } from './Resolvers';
 
 
