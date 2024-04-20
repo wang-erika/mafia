@@ -3,12 +3,21 @@
 import { Player, GameState } from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
 import { assignRole } from '../data';
+import { PubSub } from 'graphql-subscriptions';
 
 interface IContext {
   db: Db;
   user: any;
 }
 
+
+var pubSub: PubSub;
+
+export function setPubSub(ps: PubSub) {
+  pubSub = ps;
+}
+
+const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
 
 
 // Query
@@ -50,7 +59,7 @@ async function gameState(_parent: any, _args: any, context: IContext) {
       if (player.id === context.user.nickname) {
         return player;
       }
-      
+
       // If current user is Mafia, show roles of other Mafia members
       if (isCurrentUserMafia && player.role === 'Mafia') {
         return player;
@@ -102,13 +111,12 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
     }
   }
 
-    // Check if the voter has already voted this round
-    if (voter.votes.length < gameState.round) {
-      voter.votes.push(voteeId);
-    } else {
-      throw new Error("You have already voted this round.");
-    }
-  
+  // Check if the voter has already voted this round
+  if (voter.votes.length < gameState.round) {
+    voter.votes.push(voteeId);
+  } else {
+    throw new Error("You have already voted this round.");
+  }
 
 
   // Update the game state in the database
@@ -116,8 +124,8 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
     { _id: gameState._id },
     { $set: { players: gameState.players } }
   );
-
-  return gameState;
+  pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
+  //return gameState
 }
 
 
@@ -154,20 +162,19 @@ async function mafiaCastVote(_parent: any, { voterId, voteeId }: { voterId: stri
     }
   }
 
-    // Check if the voter has already voted this round
-    if (voter.killVote.length < gameState.round) {
-      voter.killVote.push(voteeId);
-    } else {
-      throw new Error("You have already voted this round.");
-    }
+  // Check if the voter has already voted this round
+  if (voter.killVote.length < gameState.round) {
+    voter.killVote.push(voteeId);
+  } else {
+    throw new Error("You have already voted this round.");
+  }
 
   // Update the game state in the database
   await context.db.collection('GameState').updateOne(
     { _id: gameState._id },
     { $set: { players: gameState.players } }
   );
-
-  return gameState;
+  pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
 
 
@@ -256,7 +263,7 @@ function checkGameEndCondition(gameState: any): boolean {
     if (player.status !== 'Dead') {
       if (player.role === 'Mafia') {
         mafiaCount++;
-      } 
+      }
       else if (player.role === 'Villager') {
         villagerCount++;
       }
@@ -364,17 +371,15 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
     );
   }
 
-  
-  if(checkGameEndCondition(gameState)){
+
+  if (checkGameEndCondition(gameState)) {
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
       { $set: { phase: 'end' } },
     );
-      
+
   }
-
-
-  return await context.db.collection('GameState').findOne({});
+  pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
 
 async function createGame(_parent: any, _args: any, context: IContext) {
@@ -455,19 +460,19 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
 async function setStartTime(args: { startTime: string }, context: { db: Db }) {
   const gameStateCollection = context.db.collection('GameState');
   try {
-      const updateResult = await gameStateCollection.findOneAndUpdate(
-          { $set: { startTime: args.startTime } },
-          { returnDocument: 'after' }
-      );
+    const updateResult = await gameStateCollection.findOneAndUpdate(
+      { $set: { startTime: args.startTime } },
+      { returnDocument: 'after' }
+    );
 
-      if (!updateResult.value) {
-          throw new Error("GameState not found or update failed.");
-      }
+    if (!updateResult.value) {
+      throw new Error("GameState not found or update failed.");
+    }
 
-      return updateResult.value;
+    return updateResult.value;
   } catch (error) {
-      console.error('Error updating GameState:', error);
-      throw new Error('An error occurred during the update.');
+    console.error('Error updating GameState:', error);
+    throw new Error('An error occurred during the update.');
   }
 }
 

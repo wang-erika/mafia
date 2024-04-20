@@ -1,8 +1,18 @@
 // Import gql from apollo-server-express
 import { gql } from 'apollo-server-express';
 import { Db } from 'mongodb';
-import { Player } from '../data';
-import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime } from './Resolvers';
+import { setPubSub, castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime } from './Resolvers';
+import { PubSub } from 'graphql-subscriptions';
+
+
+const pubsub = new PubSub();
+setPubSub(pubsub);
+interface IContext {
+  db: Db;
+  user: any;
+}
+const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
+
 
 
 export const typeDefs = gql`
@@ -19,7 +29,10 @@ export const typeDefs = gql`
     addPlayerToGame(playerId: String!): GameState
     updateGameSettings(dayLength: Int, nightLength: Int, roomName: String): GameState
     setStartTime(time:String!):GameState
-    
+  }
+
+  type Subscription {
+    gameStateChanged: GameState
   }
 
   type GameState {
@@ -44,12 +57,6 @@ export const typeDefs = gql`
   }
 `;
 
-interface IContext {
-  db: Db;
-  user: any;
-}
-
-
 export const resolvers = {
   Query: {
     currentUser,
@@ -63,5 +70,10 @@ export const resolvers = {
     addPlayerToGame,
     updateGameSettings,
     setStartTime
+  },
+  Subscription: {
+    gameStateChanged: {
+      subscribe: () => pubsub.asyncIterator([GAME_STATE_CHANGED])
+    },
   },
 };
