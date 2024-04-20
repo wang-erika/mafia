@@ -42,26 +42,9 @@ export const typeDefs = gql`
     votes: [String]!
     killVote: [String]!
   }
+
+  type Subscription {
+    startTimeUpdated : GameState
+  }
 `;
 
-interface IContext {
-  db: Db;
-  user: any;
-}
-
-
-export const resolvers = {
-  Query: {
-    currentUser,
-    gameState,
-  },
-  Mutation: {
-    castVote,
-    mafiaCastVote,
-    nextRoundOrPhase,
-    createGame,
-    addPlayerToGame,
-    updateGameSettings,
-    setStartTime
-  },
-};

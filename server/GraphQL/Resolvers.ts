@@ -474,4 +474,25 @@ async function setStartTime(args: { startTime: string }, context: { db: Db }) {
   }
 }
 
+export const resolvers = {
+  Query: {
+    currentUser,
+    gameState,
+  },
+  Mutation: {
+    castVote,
+    mafiaCastVote,
+    nextRoundOrPhase,
+    createGame,
+    addPlayerToGame,
+    updateGameSettings,
+    setStartTime
+  },
+  Subscription: {
+    startTimeUpdated: {
+      subscribe: () => pubsub.asyncIterator([START_TIME_UPDATED])
+    }
+  }
+};
+
 export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime };
