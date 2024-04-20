@@ -68,9 +68,8 @@ const SET_START_TIME = gql`
 `;
 
 const { result, loading, error } = useQuery(GET_GAME_STATE);
-const { mutate: setStartTime, loading: mutationLoading, error: mutationError } = useMutation(SET_START_TIME);
+const { mutate: setStartTime } = useMutation(SET_START_TIME);
 const gameState = computed(() => result.value?.gameState);
-
 
 interface Message {
     senderId: string;
