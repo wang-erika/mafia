@@ -16,7 +16,7 @@ export interface Player {
 export interface GameState {
   players: Player[];
   round: number;
-  phase: "day" | "night" | "pre-game";
+  phase: "day" | "night" | "pre-game" | "end";
   hostId: string;
 }
 

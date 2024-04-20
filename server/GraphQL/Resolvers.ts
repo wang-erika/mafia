@@ -231,11 +231,35 @@ function calculateMafiaMostVoted(gameState: any): string | null {
   return mostVotedPlayerId; // Return the player ID with the most kill votes
 }
 
+
+function checkGameEndCondition(gameState: any): boolean {
+  let mafiaCount = 0;
+  let villagerCount = 0;
+
+  gameState.players.forEach((player: Player) => {
+    if (player.status !== 'Dead') {
+      if (player.role === 'Mafia') {
+        mafiaCount++;
+      } 
+      else if (player.role === 'Villager') {
+        villagerCount++;
+      }
+    }
+  });
+
+  if (mafiaCount >= villagerCount || mafiaCount === 0) {
+    return true; // Game should end
+  }
+  return false; // Game continues
+}
+
+
 /*
   Progresses game to the next phase/round. Updates player statuses based on votes. 
   */
 async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({});
+
   if (!gameState) {
     throw new Error("Game state not found");
   }
@@ -323,6 +347,16 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       { $set: { round: 1, phase: 'night' } },
     );
   }
+
+  
+  if(checkGameEndCondition(gameState)){
+    await context.db.collection('GameState').updateOne(
+      { _id: gameState._id },
+      { $set: { phase: 'end' } },
+    );
+      
+  }
+
 
   return await context.db.collection('GameState').findOne({});
 }
