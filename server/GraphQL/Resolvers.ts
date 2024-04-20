@@ -4,7 +4,6 @@ import { Player, GameState } from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
 import { PubSub } from 'graphql-subscriptions';
 import { assignRole } from '../data';
-import { PubSub } from 'graphql-subscriptions';
 
 interface IContext {
   db: Db;
@@ -468,7 +467,7 @@ async function setStartTime(args: { startTime: string }, context: { db: Db }) {
           throw new Error("GameState not found or update failed.");
       }
     // Publish the updated game state to subscribers
-    pubsub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
+    pubSub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
     return updateResult.value;
   } catch (error) {
     console.error('Error updating GameState:', error);
@@ -492,8 +491,11 @@ export const resolvers = {
   },
   Subscription: {
     startTimeUpdated: {
-      subscribe: () => pubsub.asyncIterator([START_TIME_UPDATED])
-    }
+      subscribe: () => pubSub.asyncIterator([START_TIME_UPDATED])
+    },
+    gameStateChanged: {
+      subscribe: () => pubSub.asyncIterator([GAME_STATE_CHANGED])
+    },
   }
 };
 

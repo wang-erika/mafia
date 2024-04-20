@@ -166,11 +166,6 @@ io.on('connection', (socket) => {
 
 // Initialize Apollo Server for GraphQL
 
-const schema = makeExecutableSchema({
-    typeDefs,
-    resolvers
-  });
-  
 async function startApolloServer() {
     const apolloServer = new ApolloServer({
         schema,

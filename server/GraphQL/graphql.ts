@@ -33,6 +33,7 @@ export const typeDefs = gql`
 
   type Subscription {
     gameStateChanged: GameState
+    startTimeUpdated : GameState
   }
 
   type GameState {
@@ -56,7 +57,4 @@ export const typeDefs = gql`
     killVote: [String]!
   }
 
-  type Subscription {
-    startTimeUpdated : GameState
-  }
 `;
