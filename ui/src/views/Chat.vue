@@ -8,7 +8,7 @@
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="result && result.gameState">{{ result.gameState.phase.charAt(0).toUpperCase() + result.gameState.phase.slice(1)}} {{ result.gameState.round }} </h1>
+        <h1 v-if="gameState">{{ gameState.phase.charAt(0).toUpperCase() + gameState.phase.slice(1)}} {{ gameState.round }} </h1>
         
         <div>
           Time Remaining: 
@@ -38,29 +38,38 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed } from 'vue';
-import { useStorage, useTimestamp } from '@vueuse/core'
+import {  useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
-import { useQuery } from '@vue/apollo-composable'
+import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import InfoBox from './InfoBox.vue';
 import Vote from './Vote.vue';
 
-const { result, loading, error } = useQuery(gql`
-    query ExampleQuery {
-        gameState {
-            phase
-            round
-            roomName
-            hostId
-            dayLength
-            nightLength
-        }
+const GET_GAME_STATE = gql`
+  query GetGameState {
+    gameState {
+      phase
+      round
+      startTime
     }
+  }
+`;
 
-`);
+const SET_START_TIME = gql`
+  mutation UpdateStartTime($time: String!) {
+    setStartTime(input: { startTime: $time }) {
+      _id
+      startTime
+    }
+  }
+`;
+
+const { result, loading, error } = useQuery(GET_GAME_STATE);
+const { mutate: setStartTime } = useMutation(SET_START_TIME);
+const gameState = computed(() => result.value?.gameState);
 
 interface Message {
     senderId: string;
@@ -88,19 +97,20 @@ const sendChatMessage = () => {
 };
 
 //* TIMER  */
-const startTimestamp = useStorage('start-timestamp', 0)
+const startTime = ref(0);
 const timerDuration = ref(30000)
-const timeRemaining = computed(() => startTimestamp.value ? Math.max(0, startTimestamp.value + timerDuration.value - now.value) : 0)
 const now = useTimestamp({ interval: 200 })
+const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
 
-
-function start() { //temporary for now (should connect to start button from config page)
-	startTimestamp.value = Date.now()
+async function start() { //temporary for now (should connect to start button from config page)
+	startTime.value = Date.now()
+  await setStartTime(startTime);
 }
 
 function stop() {
-	startTimestamp.value = 0
+	startTime.value = 0
 }
+//* TIMER  */
 //* TIMER  */
 
 
