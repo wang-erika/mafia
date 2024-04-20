@@ -5,19 +5,19 @@ export interface Message {
 }
 
 export interface Player {
-    id: String;
-    name: String;
+    id: string;
+    name: string;
     role: Role;
-    status: String;
-    votes: String[];
-    killVote: String[];
+    status: "Alive" | "Dead";
+    votes: string[];
+    killVote: string[];
   }
 
 export interface GameState {
   players: Player[];
   round: number;
-  phase: String;
-  hostId: String;
+  phase: "day" | "night" | "pre-game";
+  hostId: string;
 }
 
 export enum Role {
@@ -25,6 +25,38 @@ export enum Role {
   Mafia = "Mafia",
   Detective = "Detective",
   Doctor = "Doctor"
+}
+
+
+export function calculateMostVoted(gameState: GameState): string | null {
+  const voteCounts: Record<string, number> = {}; // A record to keep track of votes for each player
+
+  // Iterate over each player to tally votes
+  gameState.players.forEach(player => {
+    player.votes.forEach((voteId) => {
+      if (voteCounts[voteId]) {
+        voteCounts[voteId]++;
+      } else {
+        voteCounts[voteId] = 1;
+      }
+    });
+  });
+
+  // Find the player with the maximum number of votes
+  let maxVotes = -1;
+  let mostVotedPlayerId: string | null = null;
+
+  for (const [playerId, count] of Object.entries(voteCounts)) {
+    if(count === maxVotes){
+      mostVotedPlayerId = null;
+    }
+    else if (count > maxVotes) {
+      maxVotes = count;
+      mostVotedPlayerId = playerId;
+    }
+  }
+
+  return mostVotedPlayerId; // Return the player ID with the most votes
 }
 
 export function assignRole(players: Player[]): Role | null {
