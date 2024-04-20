@@ -1,14 +1,14 @@
 // Resolvers.ts
 
-import { Player, GameState} from '../data'; // Import types as necessary
+import { Player, GameState } from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
 import { assignRole } from '../data';
 
 interface IContext {
-    db: Db;
-    user: any;
-  }
-  
+  db: Db;
+  user: any;
+}
+
 
 
 // Query
@@ -65,7 +65,7 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
   }
 
   // Check if it's the right phase to vote
-  if(gameState.phase !== "day") {
+  if (gameState.phase !== "day") {
     throw new Error("Cannot vote during night.");
   }
 
@@ -74,7 +74,7 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
   if (!voter) {
     throw new Error("Voter not found");
   }
-  if(voter.status === "Dead"){
+  if (voter.status === "Dead") {
     throw new Error("Cannot vote when dead.");
   }
 
@@ -83,7 +83,7 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
   if (!votee) {
     throw new Error("Votee not found");
   }
-  if(votee.status === "Dead"){
+  if (votee.status === "Dead") {
     throw new Error("Cannot vote for a dead player.");
   }
 
@@ -164,14 +164,16 @@ function calculateMostVoted(gameState: any): string | null {
 
   // Iterate over each player to tally votes from the current round
   gameState.players.forEach((player: Player) => {
+    if (player.status === "Alive") {
       const voteId = player.votes[currentRoundIndex]; // Get the vote from the current round
-      if (voteId) {
-          if (voteCounts[voteId]) {
-              voteCounts[voteId]++;
-          } else {
-              voteCounts[voteId] = 1;
-          }
+      if (voteId !== null) {
+        if (voteCounts[voteId]) {
+          voteCounts[voteId]++;
+        } else {
+          voteCounts[voteId] = 1;
+        }
       }
+    }
   });
 
   // Find the player with the maximum number of votes
@@ -179,14 +181,15 @@ function calculateMostVoted(gameState: any): string | null {
   let mostVotedPlayerId: string | null = null;
 
   for (const [playerId, count] of Object.entries(voteCounts)) {
-      if (count > maxVotes) {
-          maxVotes = count;
-          mostVotedPlayerId = playerId;
-      } else if (count === maxVotes) {
-          // If there's a tie, set mostVotedPlayerId to null or handle differently
-          mostVotedPlayerId = null;
-      }
+    if (count > maxVotes) {
+      maxVotes = count;
+      mostVotedPlayerId = playerId;
+    } else if (count === maxVotes) {
+      // If there's a tie, set mostVotedPlayerId to null or handle differently
+      mostVotedPlayerId = null;
+    }
   }
+  console.log("most voted player: ", mostVotedPlayerId)
 
   return mostVotedPlayerId; // Return the player ID with the most votes
 }
@@ -202,7 +205,7 @@ function calculateMafiaMostVoted(gameState: any): string | null {
   gameState.players.forEach((player: Player) => {
     if (player.role === "Mafia" && player.status === "Alive") {
       const voteId = player.killVote[currentRoundIndex]; // Get the vote from the current round
-      if (voteId) {
+      if (voteId !== null) {
         if (voteCounts[voteId]) {
           voteCounts[voteId]++;
         } else {
@@ -224,98 +227,105 @@ function calculateMafiaMostVoted(gameState: any): string | null {
       mostVotedPlayerId = playerId;
     }
   }
+  console.log("most voted mafia player: ", mostVotedPlayerId)
   return mostVotedPlayerId; // Return the player ID with the most kill votes
 }
 
 /*
   Progresses game to the next phase/round. Updates player statuses based on votes. 
   */
-  async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
-    const gameState = await context.db.collection('GameState').findOne({});
-    if (!gameState) {
-      throw new Error("Game state not found");
-    }
-
-    // if the current phase is day, check who was voted for the most and kill them (if not a tie or null).
-    // then change the phase to "night" and increment the round.
-    if (gameState.phase === 'day') {
-      const toKill = calculateMostVoted(gameState);
-      if (toKill) {
-        // Update the status of the player with the most votes to 'dead'
-        gameState.players = gameState.players.map((player: Player) => {
-          if (player.id === toKill) {
-            return { ...player, status: 'Dead' };
-          }
-          return player;
-        });
-
-        // Update game state with the new player status and move to the next round
-        await context.db.collection('GameState').updateOne(
-          { _id: gameState._id },
-          {
-            $set: {
-              players: gameState.players,
-              round: gameState.round + 1,
-              phase: 'night'
-            }
-          }
-        );
-      }
-      else {
-        // No one was killed, just proceed to the next round
-        await context.db.collection('GameState').updateOne(
-          { _id: gameState._id },
-          { $set: { round: gameState.round + 1, phase: 'night' } }
-        );
-      }
-    }
-
-    // if the current phase is night, check who was voted for the most by the mafia and kill them.
-    // then change the phase to "day". 
-    else if (gameState.phase === 'night') {
-      const toKill = calculateMafiaMostVoted(gameState);
-      console.log("Killed Tonight: ", toKill)
-
-      if (toKill) {
-        // Update the status of the player with the most votes to 'dead'
-        gameState.players = gameState.players.map((player: Player) => {
-          if (player.id === toKill) {
-
-            return { ...player, status: 'Dead' };
-          }
-          return player;
-        });
-
-        // Update game state with the new player status and move to the next round
-        await context.db.collection('GameState').updateOne(
-          { _id: gameState._id },
-          {
-            $set: {
-              players: gameState.players,
-              round: gameState.round,
-              phase: 'day'
-            }
-          }
-        );
-      }
-      else {
-        // No one was killed, just proceed to the next round
-        await context.db.collection('GameState').updateOne(
-          { _id: gameState._id },
-          { $set: { round: gameState.round+1, phase: 'night' } }
-        );
-      }
-    }
-
-    else if (gameState.phase === 'pre-game') {
-      await context.db.collection('GameState').updateOne(
-        { _id: gameState._id },
-        { $set: { round: 1, phase: 'night' } },
-      );
-    }
-
-    return await context.db.collection('GameState').findOne({});
+async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
+  const gameState = await context.db.collection('GameState').findOne({});
+  if (!gameState) {
+    throw new Error("Game state not found");
   }
+
+  // if the current phase is day, check who was voted for the most and kill them (if not a tie or null).
+  // then change the phase to "night" and increment the round.
+  if (gameState.phase === 'day') {
+
+    // Ensure every player has a vote recorded for this round, even if it's an empty vote
+    gameState.players.forEach((player: Player) => {
+      if (player.votes.length < gameState.round) {
+        player.votes.push(""); // Push an empty string to indicate no vote was made
+      }
+    });
+
+    const toKill = calculateMostVoted(gameState);
+
+    // if toKill returned a valid playerId and not an empty string
+    if (toKill) {
+      // Update the status of the player with the most votes to 'dead'
+      gameState.players = gameState.players.map((player: Player) => {
+        if (player.id === toKill) {
+          return { ...player, status: 'Dead' };
+        }
+        return player;
+      });
+    }
+
+    // Update game state with the new player status and move to the next round
+    await context.db.collection('GameState').updateOne(
+      { _id: gameState._id },
+      {
+        $set: {
+          players: gameState.players,
+          round: gameState.round + 1,
+          phase: 'night'
+        }
+      }
+    );
+  }
+
+  // if the current phase is night, check who was voted for the most by the mafia and kill them.
+  // then change the phase to "day". 
+  else if (gameState.phase === 'night') {
+
+    // Ensure every player has a vote recorded for this round, even if it's an empty vote
+    gameState.players.forEach((player: Player) => {
+      if (player.role === "Mafia") {
+        if (player.killVote.length < gameState.round) {
+          player.killVote.push(""); // Push an empty string to indicate no vote was made
+        }
+      }
+    });
+
+    const toKill = calculateMafiaMostVoted(gameState);
+    console.log("Killed Tonight: ", toKill)
+
+    if (toKill) {
+      // Update the status of the player with the most votes to 'dead'
+      gameState.players = gameState.players.map((player: Player) => {
+        if (player.id === toKill) {
+
+          return { ...player, status: 'Dead' };
+        }
+        return player;
+      });
+    }
+
+    // Update game state with the new player status and move to the next round
+    await context.db.collection('GameState').updateOne(
+      { _id: gameState._id },
+      {
+        $set: {
+          players: gameState.players,
+          round: gameState.round,
+          phase: 'day'
+        }
+      }
+    );
+  }
+
+  else if (gameState.phase === 'pre-game') {
+    await context.db.collection('GameState').updateOne(
+      { _id: gameState._id },
+      { $set: { round: 1, phase: 'night' } },
+    );
+  }
+
+  return await context.db.collection('GameState').findOne({});
+}
 
 async function createGame(_parent: any, _args: any, context: IContext) {
   const newRole = assignRole([])
@@ -334,10 +344,10 @@ async function createGame(_parent: any, _args: any, context: IContext) {
     hostId: newHost.id
   };
   const result = await context.db.collection('GameState').insertOne(newGame);
-  return await context.db.collection('GameState').findOne({_id: result.insertedId});
+  return await context.db.collection('GameState').findOne({ _id: result.insertedId });
 }
 
-async function addPlayerToGame(_parent: any, { playerId}: {playerId: String}, context: IContext) {
+async function addPlayerToGame(_parent: any, { playerId }: { playerId: String }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
   if (!gameState) {
     throw new Error("Game not found");
@@ -368,7 +378,7 @@ async function addPlayerToGame(_parent: any, { playerId}: {playerId: String}, co
   return gameState;
 }
 
-async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName }: { dayLength: number, nightLength: number, roomName: String}, context: IContext) {
+async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName }: { dayLength: number, nightLength: number, roomName: String }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
   console.log(gameState)
   if (!gameState) {
@@ -389,7 +399,7 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
     { $set: updateDoc }
   );
 
-  return await context.db.collection('GameState').findOne({_id: gameState._id});
+  return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
 export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings };
