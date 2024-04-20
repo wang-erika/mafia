@@ -34,23 +34,40 @@ async function gameState(_parent: any, _args: any, context: IContext) {
     return null;
   }
 
+  // Check if the user is authenticated
   if (!context.user) {
     gameState.players = gameState.players.map((player: Player) => ({
       ...player,
       role: "?"
     }));
   } else {
+    // Determine if the current user is a Mafia
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    const isCurrentUserMafia = currentUser && currentUser.role === 'Mafia';
+
     gameState.players = gameState.players.map((player: Player) => {
-      if (player.status === 'Dead' || player.id === context.user.nickname) {
-        return player;  // Show role if player is dead or is the current user
+      // Always show the role to the player themselves
+      if (player.id === context.user.nickname) {
+        return player;
+      }
+      
+      // If current user is Mafia, show roles of other Mafia members
+      if (isCurrentUserMafia && player.role === 'Mafia') {
+        return player;
+      }
+
+      // Show role if the player is dead, else hide it
+      if (player.status === 'Dead') {
+        return player  // Optionally, show or hide roles for dead players based on your game rules
       } else {
-        return { ...player, role: "?" };  // Hide role for alive players
+        return { ...player, role: "?" };  // Hide role for alive players who are not Mafia
       }
     });
   }
 
   return gameState;
 }
+
 
 
 // Mutations
@@ -66,7 +83,7 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
 
   // Check if it's the right phase to vote
   if (gameState.phase !== "day") {
-    throw new Error("Cannot vote during night.");
+    throw new Error("Cannot vote now.");
   }
 
   // Find the voter and ensure they are alive

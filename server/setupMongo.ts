@@ -50,9 +50,9 @@ export const gameState: GameState =
                 killVote: [], // Optional property to store the kill vote for Mafia players for each night
             },
         ],
-        round: 1,
-        phase: 'night',
-        hostId: "1",
+        round: 0,
+        phase: 'pre-game',
+        hostId: "",
     }
 
 //     // Database connection function
