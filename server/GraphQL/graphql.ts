@@ -55,25 +55,8 @@ export const typeDefs = gql`
     votes: [String]!
     killVote: [String]!
   }
-`;
 
-export const resolvers = {
-  Query: {
-    currentUser,
-    gameState,
-  },
-  Mutation: {
-    castVote,
-    mafiaCastVote,
-    nextRoundOrPhase,
-    createGame,
-    addPlayerToGame,
-    updateGameSettings,
-    setStartTime
-  },
-  Subscription: {
-    gameStateChanged: {
-      subscribe: () => pubsub.asyncIterator([GAME_STATE_CHANGED])
-    },
-  },
-};
+  type Subscription {
+    startTimeUpdated : GameState
+  }
+`;

@@ -1,6 +1,13 @@
 {
   "dependencies": {
+    "@graphql-tools/schema": "^10.0.3",
     "@vue/apollo-components": "^4.0.0",
-    "@vue/apollo-option": "^4.0.0"
+    "@vue/apollo-option": "^4.0.0",
+    "apollo-server": "^3.13.0",
+    "graphql": "^16.8.1",
+    "graphql-subscriptions": "^2.0.0",
+    "graphql-ws": "^5.16.0",
+    "subscriptions-transport-ws": "^0.11.0",
+    "ws": "^8.16.0"
   }
 }

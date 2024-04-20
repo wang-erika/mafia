@@ -2,6 +2,7 @@
 
 import { Player, GameState } from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
+import { PubSub } from 'graphql-subscriptions';
 import { assignRole } from '../data';
 import { PubSub } from 'graphql-subscriptions';
 
@@ -10,7 +11,6 @@ interface IContext {
   user: any;
 }
 
-
 var pubSub: PubSub;
 
 export function setPubSub(ps: PubSub) {
@@ -18,7 +18,7 @@ export function setPubSub(ps: PubSub) {
 }
 
 const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
-
+const START_TIME_UPDATED = 'START_TIME_UPDATED';
 
 // Query
 
@@ -464,11 +464,11 @@ async function setStartTime(args: { startTime: string }, context: { db: Db }) {
       { $set: { startTime: args.startTime } },
       { returnDocument: 'after' }
     );
-
-    if (!updateResult.value) {
-      throw new Error("GameState not found or update failed.");
-    }
-
+      if (!updateResult.value) {
+          throw new Error("GameState not found or update failed.");
+      }
+    // Publish the updated game state to subscribers
+    pubsub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
     return updateResult.value;
   } catch (error) {
     console.error('Error updating GameState:', error);
@@ -476,5 +476,25 @@ async function setStartTime(args: { startTime: string }, context: { db: Db }) {
   }
 }
 
+export const resolvers = {
+  Query: {
+    currentUser,
+    gameState,
+  },
+  Mutation: {
+    castVote,
+    mafiaCastVote,
+    nextRoundOrPhase,
+    createGame,
+    addPlayerToGame,
+    updateGameSettings,
+    setStartTime
+  },
+  Subscription: {
+    startTimeUpdated: {
+      subscribe: () => pubsub.asyncIterator([START_TIME_UPDATED])
+    }
+  }
+};
 
 export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime };

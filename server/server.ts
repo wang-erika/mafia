@@ -3,7 +3,8 @@ import http from 'http';
 import { MongoClient, Collection, Db } from 'mongodb';
 import { Server as SocketIO } from 'socket.io';
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs, resolvers } from './GraphQL/graphql'
+import { typeDefs } from './GraphQL/graphql'
+import {resolvers} from './GraphQL/Resolvers'
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
@@ -14,7 +15,6 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
-
 
 // graphql setup
 const schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -165,8 +165,13 @@ io.on('connection', (socket) => {
 });
 
 // Initialize Apollo Server for GraphQL
-async function startApolloServer() {
 
+const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers
+  });
+  
+async function startApolloServer() {
     const apolloServer = new ApolloServer({
         schema,
         context: ({ req }) => {
