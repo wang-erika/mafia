@@ -43,8 +43,8 @@
         }
       `, () => ({
         variables: {
-            dayLength: parseInt(form.value.dayLength),
-            nightLength: parseInt(form.value.nightLength),
+            dayLength: form.value.dayLength,
+            nightLength: form.value.nightLength,
             roomName: form.value.roomName
         }
       }));
