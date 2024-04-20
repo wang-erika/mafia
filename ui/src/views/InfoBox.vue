@@ -26,8 +26,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import { useQuery, useMutation } from '@vue/apollo-composable';
+import { defineComponent, computed } from 'vue';
+import { useQuery } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
 export default defineComponent({
@@ -59,25 +59,10 @@ export default defineComponent({
 
     const currentUserDetails = computed(() => {
       if (result.value && userResult.value) {
-        return result.value.gameState.players.find(player => player.id === userResult.value.currentUser) || null;
+        return result.value.gameState.players.find(player: any => player.id === userResult.value.currentUser) || null;
       }
       return null;
     });
-
-    interface Player {
-        id: String;
-        name: String;
-        role: Role;
-        status: String;
-        votes: String[];
-        killVote: String[];
-    }
-    enum Role {
-        Villager = "Villager",
-        Mafia = "Mafia",
-        Detective = "Detective",
-        Doctor = "Doctor"
-    }
 
 
 
