@@ -455,11 +455,12 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
-async function setStartTime(time:any, context: IContext ) {
+async function setStartTime(_parent: any, { startTime }: { startTime: String }, context: IContext) {
   try {
     const gameState = await context.db.collection('GameState').findOne({})
+    console.log
     const updateResult = {
-      startTime: time
+      startTime: startTime
     }
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
@@ -471,7 +472,6 @@ async function setStartTime(time:any, context: IContext ) {
     throw new Error('Failed to update the database.');
   }
 }
-
 
 export const resolvers = {
   Query: {

@@ -80,9 +80,12 @@ export default defineComponent({
         }
       }
     `);
+    const newMessage = ref('');
+    const messagesData = ref<Message[]>([]);
+    const userInfo = ref({ userId: '', name: '' });
+    const gameState = computed(() => result.value?.gameState);
+    const startTime = ref(gameState.value?.startTime || null);
 
-
-    const currentTime = ref();
     const { mutate: setStartTime, loading: mutateLoading, error: mutateError } = useMutation(gql`
       mutation SetStartTime($time: String!) {
         setStartTime(time: $time) {
@@ -92,15 +95,11 @@ export default defineComponent({
       }
     `, () => ({
       variables: {
-        time: currentTime.value  // This is how you correctly reference reactive data
+        time: startTime.value  
       }
     }))
 
-    const newMessage = ref('');
-    const messagesData = ref<Message[]>([]);
-    const userInfo = ref({ userId: '', name: '' });
-    const gameState = computed(() => result.value?.gameState);
-    const startTime = ref(gameState.value?.startTime || null);
+   
     const timerDuration = ref(30000); // 30 seconds
     const now = useTimestamp({ interval: 200 });
     const timeRemaining = computed(() => {
@@ -112,12 +111,12 @@ export default defineComponent({
     });
 
     const start = async () => {
-      currentTime.value = new Date().toISOString();
+      startTime.value = new Date().toISOString();
         setStartTime()
     };
 
     const stop = () => {
-      startTime.value = null; // Clear the start time
+      startTime.value = null; 
     };
 
     const formatTimestamp = (timestamp: Date) => {
@@ -140,7 +139,7 @@ export default defineComponent({
       });
     });
 
-        watchEffect(() => {
+      watchEffect(() => {
       if (error.value) {
         console.error("Apollo Query Error:", error.value);
       }
