@@ -47,7 +47,7 @@
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import {  useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
-const socket = io('http://localhost:8131');
+const socket = io('http://localhost:31001');
 import moment from 'moment'
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable'
 import gql from 'graphql-tag'

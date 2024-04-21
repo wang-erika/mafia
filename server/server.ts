@@ -36,7 +36,7 @@ if (mode === 'production') {
 }
 const io = new SocketIO(server, {
     cors: {
-        origin: `http://localhost:8130`,
+        origin: `http://localhost:31000`,
         methods: ["GET", "POST"],
     },
 });
@@ -75,8 +75,8 @@ app.get('/api/auth', passport.authenticate(passportStrategies, {
   }))
   
 app.get('/api/callback', passport.authenticate(passportStrategies, {
-successReturnToOrRedirect: 'http://localhost:8130/lobby',
-failureRedirect: '/',
+    successReturnToOrRedirect: 'http://localhost:31000/lobby',
+    failureRedirect: '/',
 }))
 
 

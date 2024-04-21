@@ -12,7 +12,7 @@ import { createClient } from "graphql-ws";
 
 // HTTP link for regular queries and mutations
 const httpLink = createHttpLink({
-  uri: `http://localhost:8131/graphql`, // Ensure this is your correct GraphQL endpoint
+  uri: `http://localhost:31001/graphql`, // Ensure this is your correct GraphQL endpoint
   credentials: 'include', // For sending cookies with the request (if needed)
 });
 
