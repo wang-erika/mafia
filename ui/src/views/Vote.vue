@@ -4,12 +4,13 @@
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
             <div v-if="message">{{ message }}</div>
-            <h1>Vote</h1>
+            <h1 v-if="gameStateResult.phase === 'day'">Vote</h1>
+            <h1 v-if="gameStateResult.phase === 'night'">Mafia is selecting a target...</h1>
             <form @submit.prevent="castVote" class="vote-form">
                 <table>
                     <thead>
                         <tr>
-                            <th>Player Name</th>
+                            <th>Player Names</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -22,11 +23,11 @@
                                 </label>
                             </td>
                         </tr>
-                        <tr v-for="player in alivePlayers" :key="player.id">
+                        <tr v-for="player in alivePlayers" :key="player.id" :class="{ 'disabled-row': player.status !== 'Alive' || (gameStateResult.phase === 'night' && player.role !== 'Mafia')}">
                             <td>{{ player.name }}</td>
                             <td>
                                 <label class="custom-radio">
-                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'">
+                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| player.role !== 'Mafia'">
                                     <span class="radio-box"></span>
                                 </label>
                             </td>
@@ -222,7 +223,7 @@ export default defineComponent({
       alivePlayers,
       userResult,
       message,
-      castVote,
+      castVote
     };
   }
 });
@@ -304,6 +305,10 @@ th, td {
 
 .submit-btn:disabled {
     background-color: #ccc;
+    cursor: not-allowed;
+}
+.disabled-row td {
+    color: #ccc;
     cursor: not-allowed;
 }
 </style>
