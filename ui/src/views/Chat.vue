@@ -7,6 +7,7 @@
     </div>
     <div class="content-container"> 
       <div class="chat-container"> 
+        <button @click="start">Set current time</button>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} </h1>
@@ -71,13 +72,13 @@ const GET_GAME_STATE = gql`
 `;
 
 const SET_START_TIME = gql`
-  mutation UpdateStartTime($time: String!) {
-    setStartTime(input: { startTime: $time }) {
-      _id
-      startTime
+    mutation SetStartTime($startTime: String!) {
+      setStartTime(startTime: $startTime) {
+        startTime
+      }
     }
-  }
 `;
+
 
 const { result: pubSubResult } = useSubscription<SubscriptionData>(gql`
     subscription Subscription {
@@ -102,7 +103,6 @@ const { result: pubSubResult } = useSubscription<SubscriptionData>(gql`
 // game state
 
 const { result, loading, error } = useQuery(GET_GAME_STATE);
-const { mutate: setStartTime } = useMutation(SET_START_TIME);
 //const gameState = computed(() => result.value?.gameState);
 const gameStateResult = ref<GameState | null>(null);
 
@@ -120,17 +120,11 @@ watch(pubSubResult, (newData, oldData) => {
   }
 });
 
-/// Message
+/// Messages
 
 const newMessage = ref('')
 const messagesData = ref<Message[]>([])
 const userInfo = ref({ userId: '', name: ''})
-
-
-
-function formatTimestamp(timestamp: any) {
-  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
-}
 
 const sendChatMessage = () => { 
     if (!newMessage.value.trim()){
@@ -141,35 +135,6 @@ const sendChatMessage = () => {
   });
   newMessage.value = ''; 
 };
-
-//* TIMER  */
-const startTime = ref(0);
-const timerDuration = ref(30000)
-const now = useTimestamp({ interval: 200 })
-const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
-
-async function start() { //temporary for now (should connect to start button from config page)
-	startTime.value = Date.now()
-  await setStartTime(startTime);
-}
-
-function stop() {
-	startTime.value = 0
-}
-//* TIMER  */
-//* TIMER  */
-
-
-onMounted(async () => {
-  await fetchUser();
-  await fetchMessages();
-  scrollToBottom(); // Scroll to bottom after messages are loaded
-
-  socket.on("receiveMessage", (userNewMessage: any) => {
-    messagesData.value.push(userNewMessage);
-    scrollToBottom(); // Scroll to bottom when new messages arrive
-  });
-});
 
 async function fetchUser() {
   try {
@@ -187,6 +152,7 @@ async function fetchUser() {
     console.error("Error fetching user information:", error)
   }
 }
+
 async function fetchMessages() {
     try {
         const response = await fetch('/api/entries'); 
@@ -208,6 +174,58 @@ function scrollToBottom() {
     }
   });
 }
+
+
+
+// Timer
+
+function formatTimestamp(timestamp: any) {
+  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+}
+
+const startTime = ref("");
+const timerDuration = ref(30000)
+const now = useTimestamp({ interval: 200 })
+const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
+
+const { mutate: setStartTime } = useMutation(SET_START_TIME, () => ({
+  variables: {
+    startTime: startTime.value
+  }
+})
+);
+
+
+async function start() { //temporary for now (should connect to start button from config page)
+	//startTime.value = Date.now()
+
+  console.log(formatTimestamp(Date.now()))
+
+  startTime.value = formatTimestamp(Date.now())
+
+  await setStartTime();
+}
+
+
+
+function stop() {
+	startTime.value = 0
+}
+
+//
+
+
+onMounted(async () => {
+  await fetchUser();
+  await fetchMessages();
+  scrollToBottom(); // Scroll to bottom after messages are loaded
+
+  socket.on("receiveMessage", (userNewMessage: any) => {
+    messagesData.value.push(userNewMessage);
+    scrollToBottom(); // Scroll to bottom when new messages arrive
+  });
+});
+
 
 </script>
 
