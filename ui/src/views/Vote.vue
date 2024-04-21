@@ -27,7 +27,7 @@
                             <td>{{ player.name }}</td>
                             <td>
                                 <label class="custom-radio">
-                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| player.role !== 'Mafia'">
+                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| (gameStateResult.phase === 'night' && player.role !== 'Mafia')">
                                     <span class="radio-box"></span>
                                 </label>
                             </td>
