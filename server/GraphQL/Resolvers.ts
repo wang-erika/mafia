@@ -53,32 +53,26 @@ async function gameState(_parent: any, _args: any, context: IContext) {
   if (!gameState) {
     return null;
   }
+  // Check if the user is authenticated
+  if (!context.user) {
+    gameState.players = gameState.players.map((player: Player) => ({
+      ...player,
+      role: "?"
+    }));
+  } 
 
-  const endMessage = await(checkGameEndCondition(gameState))
-
-  if (!endMessage) {
-    // hiding other player roles
-    if (!context.user) {
+  else{
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    if(!currentUser){
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-
-    else {
-      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-      if (!currentUser) {
-        gameState.players = gameState.players.map((player: Player) => ({
-          ...player,
-          role: "?"
-        }));
-      }
-      else {
-        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
-      }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
-
   return gameState;
 }
 
@@ -326,10 +320,9 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage , round: 0, players: gameState.players} },
+        { $set: { phase: endMessage } },
       );
     }
 
@@ -380,10 +373,9 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, players: gameState.players } },
+        { $set: { phase: endMessage } },
       );
     }
     // Update game state with the new player status and move to the next round
@@ -410,50 +402,45 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0, players: gameState.players } },
+        { $set: { phase: endMessage } },
       );
     }
 
     else{
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { round: gameState.round, phase: gameState.phase, players: gameState.players } },
+        { $set: { round: gameState.round, phase: gameState.phase } },
       );
     }
 
   }
 
-  const endMessage = await(checkGameEndCondition(gameState))
+  // Check if the user is authenticated
+  if (!context.user) {
+    gameState.players = gameState.players.map((player: Player) => ({
+      ...player,
+      role: "?"
+    }));
+  } 
 
-  if (!endMessage) {
-    // hiding other player roles
-    if (!context.user) {
+  else{
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    if(!currentUser){
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-
-    else {
-      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-      if (!currentUser) {
-        gameState.players = gameState.players.map((player: Player) => ({
-          ...player,
-          role: "?"
-        }));
-      }
-      else {
-        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
-      }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
 
+
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
-
 
 async function createGame(_parent: any, _args: any, context: IContext) {
   if (!context.user.groups.includes("mafia-admin")) {
@@ -556,7 +543,6 @@ async function setStartTime(_parent: any, { startTime }: { startTime: string }, 
   }
 
 }
-
 
 export const resolvers = {
   Query: {
