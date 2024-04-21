@@ -81,14 +81,20 @@ export default defineComponent({
       }
     `);
 
-    const { mutate: setStartTime } = useMutation(gql`
+
+    const currentTime = ref();
+    const { mutate: setStartTime, loading: mutateLoading, error: mutateError } = useMutation(gql`
       mutation SetStartTime($time: String!) {
         setStartTime(time: $time) {
           _id
           startTime
         }
       }
-    `);
+    `, () => ({
+      variables: {
+        time: currentTime.value  // This is how you correctly reference reactive data
+      }
+    }))
 
     const newMessage = ref('');
     const messagesData = ref<Message[]>([]);
@@ -106,13 +112,8 @@ export default defineComponent({
     });
 
     const start = async () => {
-      const currentTime = new Date().toISOString();
-      try {
-        await setStartTime();
-        startTime.value = currentTime; // Update startTime with the current ISO string
-      } catch (error) {
-        console.error("Error setting start time:", error);
-      }
+      currentTime.value = new Date().toISOString();
+        setStartTime()
     };
 
     const stop = () => {
@@ -137,6 +138,15 @@ export default defineComponent({
         messagesData.value.push(userNewMessage);
         scrollToBottom();
       });
+    });
+
+        watchEffect(() => {
+      if (error.value) {
+        console.error("Apollo Query Error:", error.value);
+      }
+      if (mutateError.value) {
+        console.error("Apollo Mutation Error:", mutateError.value);
+      }
     });
 
     const sendChatMessage = async () => {

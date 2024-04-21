@@ -455,21 +455,21 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
-async function setStartTime(args: { startTime: string }, context: { db: Db }) {
-  const gameStateCollection = context.db.collection('GameState');
+async function setStartTime(time:any, context: IContext ) {
   try {
+    const gameStateCollection = context.db.collection('GameState');
     const updateResult = await gameStateCollection.findOneAndUpdate(
-      {}, // Assuming you want to update the first document found, or add a specific filter here
-      { $set: { startTime: args.startTime } }, // Correct placement of the update operation
-      { returnDocument: 'after' } // Correct placement of options
+      {},
+      { $set: { startTime: time } },
+      { returnDocument: 'after' }
     );
     if (!updateResult.value) {
-      throw new Error("GameState not found or update failed.");
+      throw new Error('GameState not found or update failed.');
     }
     return updateResult.value;
   } catch (error) {
-    console.error('Error updating GameState:', error);
-    throw new Error('An error occurred during the update.');
+    console.error('Database operation failed:', error);
+    throw new Error('Failed to update the database.');
   }
 }
 
