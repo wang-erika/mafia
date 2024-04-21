@@ -53,7 +53,7 @@ export const gameState: GameState =
         round: 0,
         phase: 'pre-game',
         hostId: "",
-        startTime: new Date().toISOString()
+        startTime: ""
     }
 
 //     // Database connection function

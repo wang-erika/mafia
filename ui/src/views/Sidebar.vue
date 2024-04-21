@@ -33,34 +33,8 @@
 import { defineComponent, watch, ref } from 'vue';
 import { useQuery, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
+import { GameState, SubscriptionData } from './data'
 
-enum Role {
-  Villager = "Villager",
-  Mafia = "Mafia",
-  Detective = "Detective",
-  Doctor = "Doctor"
-}
-
-interface Player {
-    id: string;
-    name: string;
-    role: Role;
-    status: "Alive" | "Dead";
-    votes: string[];
-    killVote: string[];
-  }
-
-interface GameState {
-  players: Player[];
-  round: number;
-  phase: "day" | "night" | "pre-game" | "end";
-  hostId: string;
-  roomName: string;
-}
-
-interface SubscriptionData {
-    gameStateChanged: GameState;
-}
 
 export default defineComponent({
   setup() {
@@ -89,7 +63,6 @@ export default defineComponent({
     watch(result, (newData) => {
       if (newData && newData.gameState) {
         gameStateResult.value = newData.gameState;
-        console.log("Initial data loaded:", newData.gameState);
       }
     }, { immediate: true });
 
@@ -115,7 +88,6 @@ export default defineComponent({
     watch(pubSubResult, (newData, oldData) => {
         if (newData) {
             gameStateResult.value = newData.gameStateChanged;
-            console.log(newData)
         }
     });
 

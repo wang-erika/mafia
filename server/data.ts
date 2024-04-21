@@ -24,8 +24,8 @@ export interface GameState {
 export enum Role {
   Villager = "Villager",
   Mafia = "Mafia",
-  Detective = "Detective",
-  Doctor = "Doctor"
+  // Detective = "Detective",
+  // Doctor = "Doctor"
 }
 
 
@@ -62,10 +62,8 @@ export function calculateMostVoted(gameState: GameState): string | null {
 
 export function assignRole(players: Player[]): Role | null {
   const roleCounts = new Map<Role, number>([
-    [Role.Villager, 2],
-    [Role.Mafia, 1],
-    [Role.Doctor, 1],
-    [Role.Detective, 1]
+    [Role.Villager, 3],
+    [Role.Mafia, 2],
   ]);
   players.forEach(player => {
     if (player.role && roleCounts.has(player.role)) {

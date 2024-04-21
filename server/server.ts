@@ -69,6 +69,7 @@ passport.deserializeUser((user, done) => {
     })
 
 // Authentication routes
+
 app.get('/api/auth', passport.authenticate(passportStrategies, {
     successReturnToOrRedirect: "/"
   }))
@@ -97,11 +98,6 @@ app.get('/api/check', (req, res) => {
 })
 
 app.use(express.json());
-
-// app.use((req, res, next) => {
-//     console.log("app.use: ", req.user, req.url, req.headers.cookie);
-//     next()
-// })
 
 // API route for fetching message entries
 app.get('/api/entries', checkAuthenticated, async (req, res) => {
@@ -144,8 +140,6 @@ async function startApolloServer() {
     const apolloServer = new ApolloServer({
         schema,
         context: ({ req }) => {
-            // console.log("Apollo Context - Session:", req.session);
-            // console.log("Apollo Context - User:", req.user);
             return {
                 db: client.db("chatApp"),
                 user: req.user
@@ -165,7 +159,7 @@ async function startApolloServer() {
     useServer({
         schema, 
         context: async () => ({
-            db: client.db("chatApp")
+            db: client.db("chatApp"), 
         })
     }, wsServer);
 

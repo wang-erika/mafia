@@ -29,8 +29,7 @@ export default {
 
     function handleNextPhase() {
       nextRoundOrPhase().then(response => {
-        if (response) {
-          console.log('Phase updated:', response.data.nextRoundOrPhase);
+        if (response!== null) {
         } else {
           console.error('No response returned');
         }

@@ -29,6 +29,21 @@ async function currentUser(_parent: any, _args: any, context: IContext) {
   }
 }
 
+async function filterPlayerRoles(players: Player[], currentUser: Player){
+  return players.map((player: Player) => {
+    if(player.id === currentUser.id){
+      return player;
+    }
+    if(player.role === "Mafia" && currentUser.role === "Mafia"){
+      return player;
+    }
+    if (player.status === 'Dead') {
+      return player; // Show or hide roles for dead players based on game rules
+    }
+    return { ...player, role: "?" }; // Hide role for others
+  })
+
+}
 /*
   Queries for the GameState in the current database. Will limit information shown to users.
 */
@@ -37,38 +52,26 @@ async function gameState(_parent: any, _args: any, context: IContext) {
   if (!gameState) {
     return null;
   }
-
   // Check if the user is authenticated
   if (!context.user) {
     gameState.players = gameState.players.map((player: Player) => ({
       ...player,
       role: "?"
     }));
-  } else {
-    // Determine if the current user is a Mafia
+  } 
+
+  else{
     const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-    const isCurrentUserMafia = currentUser && currentUser.role === 'Mafia';
-
-    gameState.players = gameState.players.map((player: Player) => {
-      // Always show the role to the player themselves
-      if (player.id === context.user.nickname) {
-        return player;
-      }
-
-      // If current user is Mafia, show roles of other Mafia members
-      if (isCurrentUserMafia && player.role === 'Mafia') {
-        return player;
-      }
-
-      // Show role if the player is dead, else hide it
-      if (player.status === 'Dead') {
-        return player  // Optionally, show or hide roles for dead players based on your game rules
-      } else {
-        return { ...player, role: "?" };  // Hide role for alive players who are not Mafia
-      }
-    });
+    if(!currentUser){
+      gameState.players = gameState.players.map((player: Player) => ({
+        ...player,
+        role: "?"
+      }));
+    }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
+    }
   }
-
   return gameState;
 }
 
@@ -81,6 +84,7 @@ async function gameState(_parent: any, _args: any, context: IContext) {
 */
 async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, voteeId: string }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({});
+
   if (!gameState) {
     throw new Error("Game state not found");
   }
@@ -117,9 +121,9 @@ async function castVote(_parent: any, { voterId, voteeId }: { voterId: string, v
   await context.db.collection('GameState').updateOne(
     { _id: gameState._id },
     { $set: { players: gameState.players } }
-  );
+  ); 
 
-  pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
+  //pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
   //return gameState
 }
 
@@ -169,14 +173,16 @@ async function mafiaCastVote(_parent: any, { voterId, voteeId }: { voterId: stri
     { _id: gameState._id },
     { $set: { players: gameState.players } }
   );
-  pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
+
+
+  //pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
 
 
 /*
   Calculates who was the most voted during the last daytime phase
 */
-function calculateMostVoted(gameState: any): string | null {
+async function calculateMostVoted(gameState: any): Promise<string | null> {
   const voteCounts: Record<string, number> = {}; // A record to keep track of votes for each player
   const currentRoundIndex = gameState.round - 1; // Index for the current round's votes
 
@@ -207,7 +213,6 @@ function calculateMostVoted(gameState: any): string | null {
       mostVotedPlayerId = null;
     }
   }
-  console.log("most voted player: ", mostVotedPlayerId)
 
   return mostVotedPlayerId; // Return the player ID with the most votes
 }
@@ -215,7 +220,7 @@ function calculateMostVoted(gameState: any): string | null {
 /*
   Calculates who was the most voted during the last nighttime phase
 */
-function calculateMafiaMostVoted(gameState: any): string | null {
+async function calculateMafiaMostVoted(gameState: any): Promise<string | null> {
   const voteCounts: Record<string, number> = {}; // A record to keep track of votes for each player
   const currentRoundIndex = gameState.round - 1; // Index for the current round's votes
 
@@ -245,12 +250,11 @@ function calculateMafiaMostVoted(gameState: any): string | null {
       mostVotedPlayerId = playerId;
     }
   }
-  console.log("most voted mafia player: ", mostVotedPlayerId)
   return mostVotedPlayerId; // Return the player ID with the most kill votes
 }
 
 
-function checkGameEndCondition(gameState: any): boolean {
+async function checkGameEndCondition(gameState: any): Promise<boolean> {
   let mafiaCount = 0;
   let villagerCount = 0;
 
@@ -293,7 +297,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       }
     });
 
-    const toKill = calculateMostVoted(gameState);
+    const toKill = await(calculateMostVoted(gameState));
 
     // if toKill returned a valid playerId and not an empty string
     if (toKill) {
@@ -305,6 +309,8 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
         return player;
       });
     }
+    gameState.phase = "night"
+    gameState.round = gameState.round + 1
 
     // Update game state with the new player status and move to the next round
     await context.db.collection('GameState').updateOne(
@@ -312,8 +318,8 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       {
         $set: {
           players: gameState.players,
-          round: gameState.round + 1,
-          phase: 'night'
+          round: gameState.round, 
+          phase: gameState.phase
         }
       }
     );
@@ -332,8 +338,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       }
     });
 
-    const toKill = calculateMafiaMostVoted(gameState);
-    console.log("Killed Tonight: ", toKill)
+    const toKill = await(calculateMafiaMostVoted(gameState));
 
     if (toKill) {
       // Update the status of the player with the most votes to 'dead'
@@ -346,34 +351,62 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       });
     }
 
+    gameState.phase = "day"
+
     // Update game state with the new player status and move to the next round
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
       {
         $set: {
           players: gameState.players,
-          round: gameState.round,
-          phase: 'day'
+          round: gameState.round, 
+          phase: gameState.phase
         }
       }
     );
   }
 
   else if (gameState.phase === 'pre-game') {
+    gameState.phase = "night"
+    gameState.round = 1
+
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
-      { $set: { round: 1, phase: 'night' } },
+      { $set: { round: gameState.round, phase: gameState.phase } },
     );
   }
 
 
-  if (checkGameEndCondition(gameState)) {
+  if (await(checkGameEndCondition(gameState))) {
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
       { $set: { phase: 'end' } },
     );
 
   }
+
+  // Check if the user is authenticated
+  if (!context.user) {
+    gameState.players = gameState.players.map((player: Player) => ({
+      ...player,
+      role: "?"
+    }));
+  } 
+
+  else{
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    if(!currentUser){
+      gameState.players = gameState.players.map((player: Player) => ({
+        ...player,
+        role: "?"
+      }));
+    }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
+    }
+  }
+
+
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
 
@@ -433,7 +466,6 @@ async function addPlayerToGame(_parent: any, { playerId }: { playerId: String },
 
 async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName }: { dayLength: number, nightLength: number, roomName: String }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
-  console.log(gameState)
   if (!gameState) {
     throw new Error("Game not found")
   }

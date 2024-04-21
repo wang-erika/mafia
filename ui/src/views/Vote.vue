@@ -2,7 +2,7 @@
     <div>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
+        <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
             <div v-if="message">{{ message }}</div>
             <h1>Vote</h1>
             <form @submit.prevent="castVote" class="vote-form">
@@ -45,27 +45,49 @@
 
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import { useQuery, useMutation } from '@vue/apollo-composable';
+import { defineComponent, ref, computed, watch } from 'vue';
+import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
+
+enum Role {
+  Villager = "Villager",
+  Mafia = "Mafia",
+  Detective = "Detective",
+  Doctor = "Doctor"
+}
+
+interface Player {
+    id: string;
+    name: string;
+    role: Role;
+    status: "Alive" | "Dead";
+    votes: string[];
+    killVote: string[];
+  }
+
+interface GameState {
+  players: Player[];
+  round: number;
+  phase: "day" | "night" | "pre-game" | "end";
+  hostId: string;
+  roomName: string;
+}
+
+interface SubscriptionData {
+    gameStateChanged: GameState;
+}
+
+
 
 export default defineComponent({
   setup() {
 
-    interface Player {
-        id: String;
-        name: String;
-        role: Role;
-        status: String;
-        votes: String[];
-        killVote: String[];
-    }
-    enum Role {
-        Villager = "Villager",
-        Mafia = "Mafia",
-        Detective = "Detective",
-        Doctor = "Doctor"
-    }
+    const gameStateResult = ref<GameState | null>(null);
+    const selectedVote = ref('');
+    const message = ref('');
+    const alivePlayers = computed(() => {
+      return gameStateResult.value?.players.filter((player: Player) => player.status === 'Alive') || [];
+    })
 
     const { result, loading, error } = useQuery(gql`
       query GameStateQuery {
@@ -90,12 +112,14 @@ export default defineComponent({
         currentUser
       }
     `)
+    
+    watch(result, (newData) => {
+      if (newData && newData.gameState) {
+        gameStateResult.value = newData.gameState;
+      }
+    }, { immediate: true });
 
-    const selectedVote = ref('');
-    const message = ref('');
-    const alivePlayers = computed(() => {
-      return result.value?.gameState.players.filter((player: Player) => player.status === 'Alive') || [];
-    })
+    
 
     const { mutate: castVoteMutation } = useMutation(gql`
       mutation CastVote($voterId: String!, $voteeId: String!) {
@@ -132,10 +156,36 @@ export default defineComponent({
     }))
 
 
+    const { result: pubSubResult } = useSubscription<SubscriptionData>(gql`
+        subscription Subscription {
+            gameStateChanged {
+                _id
+                hostId
+                phase
+                players {
+                    id
+                    killVote
+                    name
+                    role
+                    status
+                    votes
+                }
+                round
+            }
+        }
+    `);
+
+    watch(pubSubResult, (newData, oldData) => {
+        if (newData) {
+            gameStateResult.value = newData.gameStateChanged;
+            message.value = ""
+        }
+    }, { immediate: true });
+
     // In your castVote method:
     const castVote = async () => {
         if (selectedVote.value != null) { // This allows the empty string to be a valid choice
-            if (result.value.gameState.phase === "day") {
+            if (gameStateResult.value?.phase === "day") {
                 try {
                     await castVoteMutation();
                     //selectedVote.value = '';
@@ -146,7 +196,7 @@ export default defineComponent({
                     selectedVote.value = ''; // Reset the vote selection
                 }
             }
-            else if (result.value.gameState.phase == "night"){
+            else if (gameStateResult.value?.phase == "night"){
                 try {
                     await castMafiaVoteMutation();
                     //selectedVote.value = '';
@@ -165,7 +215,7 @@ export default defineComponent({
 
 
     return {
-      result,
+      gameStateResult,
       loading,
       error,
       selectedVote,
