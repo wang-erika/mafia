@@ -459,20 +459,20 @@ async function setStartTime(args: { startTime: string }, context: { db: Db }) {
   const gameStateCollection = context.db.collection('GameState');
   try {
     const updateResult = await gameStateCollection.findOneAndUpdate(
-      { $set: { startTime: args.startTime } },
-      { returnDocument: 'after' }
+      {}, // Assuming you want to update the first document found, or add a specific filter here
+      { $set: { startTime: args.startTime } }, // Correct placement of the update operation
+      { returnDocument: 'after' } // Correct placement of options
     );
-      if (!updateResult.value) {
-          throw new Error("GameState not found or update failed.");
-      }
-    // Publish the updated game state to subscribers
-    pubSub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
+    if (!updateResult.value) {
+      throw new Error("GameState not found or update failed.");
+    }
     return updateResult.value;
   } catch (error) {
     console.error('Error updating GameState:', error);
     throw new Error('An error occurred during the update.');
   }
 }
+
 
 export const resolvers = {
   Query: {
@@ -489,13 +489,11 @@ export const resolvers = {
     setStartTime
   },
   Subscription: {
-    startTimeUpdated: {
-      subscribe: () => pubSub.asyncIterator([START_TIME_UPDATED])
-    },
     gameStateChanged: {
       subscribe: () => pubSub.asyncIterator([GAME_STATE_CHANGED])
     },
   }
 };
 
-export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime };
+export { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime};
+export default resolvers;

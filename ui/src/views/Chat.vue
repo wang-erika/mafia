@@ -10,7 +10,6 @@
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <h1 v-if="gameState">{{ gameState.phase.charAt(0).toUpperCase() + gameState.phase.slice(1)}} {{ gameState.round }} </h1>
-        
         <div>
           Time Remaining: 
           <b-form-input v-model="timerDuration" debounce="500" number class="mb-2" />
@@ -38,7 +37,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { watchEffect, ref, onMounted, nextTick, computed } from 'vue';
 import {  useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
@@ -61,15 +60,17 @@ const GET_GAME_STATE = gql`
 `;
 
 const SET_START_TIME = gql`
-  mutation UpdateStartTime($time: String!) {
-    setStartTime(input: { startTime: $time }) {
+  mutation SetStartTime($time: String!) {
+    setStartTime(time: $time) {
       _id
       startTime
     }
   }
 `;
 
-const { result, loading, error } = useQuery(GET_GAME_STATE);
+const { result, loading, error } = useQuery(GET_GAME_STATE, {}, {
+  pollInterval: 1000 // Polling every 1000 milliseconds (1 second)
+});
 const { mutate: setStartTime } = useMutation(SET_START_TIME);
 const gameState = computed(() => result.value?.gameState);
 
@@ -99,22 +100,38 @@ const sendChatMessage = () => {
 };
 
 //* TIMER  */
-const startTime = ref(0);
-const timerDuration = ref(30000)
-const now = useTimestamp({ interval: 200 })
-const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
+const startTime = ref(gameState.value?.startTime || 0);
+const timerDuration = ref(30000);
+const now = useTimestamp({ interval: 200 });
+const timeRemaining = computed(() => {
+  const start = Date.parse(startTime.value);
+  return startTime.value ? Math.max(0, start + timerDuration.value - now.value) : 0;
+});
 
-async function start() { //temporary for now (should connect to start button from config page)
-	startTime.value = Date.now()
-  await setStartTime(startTime);
+async function start() {
+  const currentTime = Date.now();
+  try {
+  await setStartTime({
+    variables: {
+      time: currentTime.toString()
+    }
+  });
+} catch (error) {
+  console.error("Error setting start time:", error);
+  if (error.networkError) console.log(`Network error: ${error.networkError}`);
+  if (error.graphQLErrors) error.graphQLErrors.forEach(err => console.log(`GraphQL error: ${err.message}`));
+}
 }
 
 function stop() {
-	startTime.value = 0
+  startTime.value = 0;
 }
-//* TIMER  */
-//* TIMER  */
 
+watchEffect(() => {
+  if (gameState.value?.startTime) {
+    startTime.value = gameState.value.startTime;
+  }
+});
 
 onMounted(async () => {
   await fetchUser();

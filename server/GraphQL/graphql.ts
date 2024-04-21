@@ -1,6 +1,8 @@
 // Import gql from apollo-server-express
 import { gql } from 'apollo-server-express';
 import { Db } from 'mongodb';
+import { castVote, mafiaCastVote, nextRoundOrPhase, currentUser, gameState, createGame, addPlayerToGame, updateGameSettings, setStartTime } from './Resolvers';
+import resolvers from './Resolvers'
 
 
 export const typeDefs = gql`
@@ -21,7 +23,6 @@ export const typeDefs = gql`
 
   type Subscription {
     gameStateChanged: GameState
-    startTimeUpdated : GameState
   }
 
   type GameState {

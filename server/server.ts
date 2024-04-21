@@ -169,6 +169,8 @@ io.on('connection', (socket) => {
 async function startApolloServer() {
     const apolloServer = new ApolloServer({
         schema,
+        typeDefs,
+        resolvers,
         context: ({ req }) => {
             // console.log("Apollo Context - Session:", req.session);
             // console.log("Apollo Context - User:", req.user);
