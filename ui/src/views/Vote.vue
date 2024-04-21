@@ -1,46 +1,45 @@
 <template>
     <div>
-        <div v-if="loading">Loading...</div>
-        <div v-if="error">{{ error.message }}</div>
-        <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
-            <div v-if="message">{{ message }}</div>
-            <h1>Vote</h1>
-            <form @submit.prevent="castVote" class="vote-form">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>No Vote</td>
-                            <td>
-                                <label class="custom-radio">
-                                    <input type="radio" value="" v-model="selectedVote">
-                                    <span class="radio-box"></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr v-for="player in alivePlayers" :key="player.id">
-                            <td>{{ player.name }}</td>
-                            <td>
-                                <label class="custom-radio">
-                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'">
-                                    <span class="radio-box"></span>
-                                </label>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button type="submit" :disabled="selectedVote === null" class="submit-btn">Submit Vote</button>
-            </form>
-        </div>
-        <div v-else>
-            No players data available.
-        </div>
+      <div v-if="loading">Loading...</div>
+      <div v-if="error" class="error-message">{{ error.message }}</div>
+      <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
+        <div v-if="message" class="message">{{ message }}</div>
+        <h1 v-if="gameStateResult.phase === 'day'" class="phase-heading">Vote</h1>
+        <h1 v-if="gameStateResult.phase === 'night'" class="phase-heading">Mafia is selecting a target</h1>
+        <form @submit.prevent="castVote" class="vote-form">
+          <table>
+            <thead>
+              <tr>
+                <th>Player Names</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>No Vote</td>
+                <td>
+                  <label class="custom-radio">
+                    <input type="radio" value="" v-model="selectedVote">
+                    <span class="radio-box"></span>
+                  </label>
+                </td>
+              </tr>
+              <tr v-for="player in alivePlayers" :key="player.id" :class="{ 'disabled-row': player.status !== 'Alive' || (gameStateResult.phase === 'night' && player.role !== 'Mafia')}">
+                <td>{{ player.name }}</td>
+                <td>
+                  <label class="custom-radio">
+                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| (gameStateResult.phase === 'night' && player.role !== 'Mafia')">
+                    <span class="radio-box"></span>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="submit" :disabled="selectedVote === null" class="submit-btn">Submit Vote</button>
+        </form>
+      </div>
+      <div v-else class="no-data-message">No players data available.</div>
     </div>
-</template>
+  </template>
 
 
 
@@ -222,7 +221,7 @@ export default defineComponent({
       alivePlayers,
       userResult,
       message,
-      castVote,
+      castVote
     };
   }
 });
@@ -230,80 +229,110 @@ export default defineComponent({
 
 
 <style scoped>
+
 .table-container {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 20px;
-    background-color: #f5f5f5;
+  border: 1px solid #4CAF50;
+  border-radius: 5px;
+  padding: 25px;
+  background-color: #f0f8ff;
+  font-family: Verdana, sans-serif;
+}
+
+.phase-heading {
+  color: #290eee;
+  font-size: 30px;
+  text-align: center;
+
+}
+.phase-subheading{
+    text-align:center
+}
+
+.message, .error-message, .no-data-message {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #ffe4e1;
+  border: 1px solid #ff6347;
+  border-radius: 5px;
+  text-align:center;
 }
 
 .vote-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 table {
     width: 100%;
-    margin-bottom: 20px;
-    border-collapse: collapse; /* Add border-collapse */
+  margin-bottom: 20px;
+  border-collapse: collapse;
+  padding: 10px;
+  border: 1px solid #cccccc9a; 
+
 }
 
 th, td {
     text-align: left;
-    padding: 8px; /* Add some padding to table cells */
+  padding: 8px;
+  border: 1px solid #cccccc9a;
 }
 
 .custom-radio input[type="radio"] {
-    display: none;
+  display: none;
 }
 
 .custom-radio .radio-box {
-    height: 20px;
-    width: 20px;
-    display: inline-block;
-    position: relative;
-    background-color: #f1f1f1;
-    border: 1px solid #d1d1d1; /* Adjust border width for a lighter look */
-    cursor: pointer;
-    vertical-align: middle; /* Align the custom radio vertically */
+  height: 20px;
+  width: 20px;
+  display: inline-block;
+  position: relative;
+  background-color: #f1f1f1;
+  border: 1px solid #d1d1d1;
+  cursor: pointer;
+  vertical-align: middle;
 }
 
 .custom-radio input[type="radio"]:checked + .radio-box {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
+  background-color: #4CAF50;
+  border-color: #4CAF50;
 }
 
 .custom-radio .radio-box::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
-    background-color: white;
-    border-radius: 50%;
-    display: none;
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border-radius: 50%;
+  display: none;
 }
 
 .custom-radio input[type="radio"]:checked + .radio-box::after {
-    display: block;
+  display: block;
 }
 
 .submit-btn {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    align-self: center; /* Center the button in the form */
-    margin-top: 10px; /* Add space between the table and the button */
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  align-self: center;
+  margin-top: 10px;
 }
 
 .submit-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.disabled-row td {
+  color: #ccc;
+  cursor: not-allowed;
 }
 </style>

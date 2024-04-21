@@ -53,33 +53,26 @@ async function gameState(_parent: any, _args: any, context: IContext) {
   if (!gameState) {
     return null;
   }
+  // Check if the user is authenticated
+  if (!context.user) {
+    gameState.players = gameState.players.map((player: Player) => ({
+      ...player,
+      role: "?"
+    }));
+  } 
 
-  const endMessage = await(checkGameEndCondition(gameState))
-  console.log(endMessage);
-
-  if (!endMessage) {
-    // hiding other player roles
-    if (!context.user) {
+  else{
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    if(!currentUser){
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-
-    else {
-      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-      if (!currentUser) {
-        gameState.players = gameState.players.map((player: Player) => ({
-          ...player,
-          role: "?"
-        }));
-      }
-      else {
-        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
-      }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
-
   return gameState;
 }
 
@@ -278,10 +271,10 @@ async function checkGameEndCondition(gameState: any): Promise<String | null> {
   });
 
   if (mafiaCount >= villagerCount) {
-    return "mafia-Win"
+    return "mafia-win"
   }
   else if (mafiaCount === 0){
-    return "villager-Win"
+    return "villager-win"
   }
   return null;
 }
@@ -327,10 +320,9 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage , round: 0, players: gameState.players} },
+        { $set: { phase: endMessage } },
       );
     }
 
@@ -381,10 +373,9 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, players: gameState.players } },
+        { $set: { phase: endMessage } },
       );
     }
     // Update game state with the new player status and move to the next round
@@ -411,50 +402,45 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
-      gameState.round = 0
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0, players: gameState.players } },
+        { $set: { phase: endMessage } },
       );
     }
 
     else{
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { round: gameState.round, phase: gameState.phase, players: gameState.players } },
+        { $set: { round: gameState.round, phase: gameState.phase } },
       );
     }
 
   }
 
-  const endMessage = await(checkGameEndCondition(gameState))
+  // Check if the user is authenticated
+  if (!context.user) {
+    gameState.players = gameState.players.map((player: Player) => ({
+      ...player,
+      role: "?"
+    }));
+  } 
 
-  if (!endMessage) {
-    // hiding other player roles
-    if (!context.user) {
+  else{
+    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+    if(!currentUser){
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-
-    else {
-      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-      if (!currentUser) {
-        gameState.players = gameState.players.map((player: Player) => ({
-          ...player,
-          role: "?"
-        }));
-      }
-      else {
-        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
-      }
+    else{
+      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
 
+
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
-
 
 async function createGame(_parent: any, _args: any, context: IContext) {
   if (!context.user.groups.includes("mafia-admin")) {
@@ -538,23 +524,29 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
-async function setStartTime(args: { startTime: string }, context: { db: Db }) {
-  const gameStateCollection = context.db.collection('GameState');
-  try {
-    const updateResult = await gameStateCollection.findOneAndUpdate(
-      { $set: { startTime: args.startTime } },
-      { returnDocument: 'after' }
-    );
-      if (!updateResult.value) {
-          throw new Error("GameState not found or update failed.");
-      }
-    // Publish the updated game state to subscribers
-    pubSub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
-    return updateResult.value;
-  } catch (error) {
-    console.error('Error updating GameState:', error);
-    throw new Error('An error occurred during the update.');
+async function setStartTime(_parent: any, { startTime }: { startTime: string }, context: IContext) {
+
+  console.log(startTime)
+
+  if(startTime){
+    try {
+      const gameState = await context.db.collection('GameState').findOne({})
+      gameState.startTime = startTime
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { startTime: gameState.startTime } }
+      );
+      return await context.db.collection('GameState').findOne({ _id: gameState._id });
+    } 
+    catch (error) {
+      console.error('Database operation failed:', error);
+      throw new Error('Failed to update the database.');
+    } 
   }
+  else{
+    throw new Error("No starttime.")
+  }
+
 }
 
 export const resolvers = {
