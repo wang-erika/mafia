@@ -4,6 +4,7 @@ import { Player, GameState } from '../data'; // Import types as necessary
 import { Db } from 'mongodb';
 import { PubSub } from 'graphql-subscriptions';
 import { assignRole } from '../data';
+import e from 'express';
 
 interface IContext {
   db: Db;
@@ -312,17 +313,25 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
     gameState.phase = "night"
     gameState.round = gameState.round + 1
 
-    // Update game state with the new player status and move to the next round
-    await context.db.collection('GameState').updateOne(
-      { _id: gameState._id },
-      {
-        $set: {
-          players: gameState.players,
-          round: gameState.round, 
-          phase: gameState.phase
+    if (await(checkGameEndCondition(gameState))) {
+      gameState.phase = "end"
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { phase: 'end' } },
+      );
+    }
+    else{    // Update game state with the new player status and move to the next round
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        {
+          $set: {
+            players: gameState.players,
+            round: gameState.round, 
+            phase: gameState.phase
+          }
         }
-      }
-    );
+      );
+    }
   }
 
   // if the current phase is night, check who was voted for the most by the mafia and kill them.
@@ -352,18 +361,27 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
     }
 
     gameState.phase = "day"
-
+    
+    if (await(checkGameEndCondition(gameState))) {
+      gameState.phase = "end"
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { phase: 'end' } },
+      );
+    }
     // Update game state with the new player status and move to the next round
-    await context.db.collection('GameState').updateOne(
-      { _id: gameState._id },
-      {
-        $set: {
-          players: gameState.players,
-          round: gameState.round, 
-          phase: gameState.phase
+    else{
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        {
+          $set: {
+            players: gameState.players,
+            round: gameState.round, 
+            phase: gameState.phase
+          }
         }
-      }
-    );
+      );
+    }
   }
 
   else if (gameState.phase === 'pre-game') {
@@ -382,7 +400,6 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       { _id: gameState._id },
       { $set: { phase: 'end' } },
     );
-
   }
 
   // Check if the user is authenticated
