@@ -15,6 +15,9 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 
+// OIDC testing
+const passportStrategies = ["disable-security", "oidc"]
+
 // graphql setup
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
@@ -33,7 +36,7 @@ if (mode === 'production') {
 }
 const io = new SocketIO(server, {
     cors: {
-        origin: `http://localhost:${uiPort}`,
+        origin: `http://localhost:8130`,
         methods: ["GET", "POST"],
     },
 });
@@ -61,19 +64,29 @@ app.use(passport.session());
 passport.serializeUser((user, done) => {
     done(null, user)
   })
-  passport.deserializeUser((user, done) => {
+passport.deserializeUser((user, done) => {
     done(null, user)
-  })
+    })
 
 // Authentication routes
-app.get('/api/auth', passport.authenticate('oidc'));
 
-app.get('/api/callback', passport.authenticate('oidc', {
-    failureRedirect: '/login',
-}), (req, res) => {
-    res.redirect(`http://localhost:${uiPort}`)
-})
+app.get('/api/auth', passport.authenticate(passportStrategies, {
+    successReturnToOrRedirect: "/"
+  }))
+  
+app.get('/api/callback', passport.authenticate(passportStrategies, {
+successReturnToOrRedirect: 'http://localhost:8130/lobby',
+failureRedirect: '/',
+}))
 
+
+function checkAuthenticated(req: any, res: any, next: any) {
+    if (!req.isAuthenticated()) {
+      res.sendStatus(401)
+      return
+    }
+    next()
+  }
 
 // Route to check on front end 
 app.get('/api/check', (req, res) => {
@@ -87,7 +100,7 @@ app.get('/api/check', (req, res) => {
 app.use(express.json());
 
 // API route for fetching message entries
-app.get('/api/entries', async (req, res) => {
+app.get('/api/entries', checkAuthenticated, async (req, res) => {
     try {
         const db = client.db("chatApp");
         const messages = db.collection('messages');

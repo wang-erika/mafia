@@ -35,5 +35,13 @@ jobs:
     - name: Set up Kubectl
       uses: azure/setup-kubectl@v1
 
+    - name: Remove current pods
+      run: kubectl delete -f k8s/
+
     - name: Deploy to Kubernetes
       run: kubectl apply -f k8s/
+
+    - name: Port Forwarding
+      run: kubectl port-forward service/db 27017:27017
+
+      

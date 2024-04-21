@@ -26,3 +26,7 @@ spec:
           value: mongodb://db
         - name: ENV_MODE
           value: production
+        - name: CLIENT_ID
+          value: 11da9c7449f9a5801bf23e09b18e67d5cf957f37206fbdeb1bcf271468ae0834
+        - name: CLIENT_SECRET
+          value: gloas-2982e75be02ae5119da9a3795ebfd0e66975e2601dffc56c3a996f6f2e5b9e22

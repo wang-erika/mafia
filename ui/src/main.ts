@@ -3,7 +3,6 @@ import { createRouter, createWebHistory, NavigationGuardNext, RouteLocationNorma
 import App from './App.vue';
 import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
-import Vote from './views/Vote.vue'
 import GameLobby from './views/GameLobby.vue'
 import Sidebar from './views/Sidebar.vue';
 import SettingsForm from './views/SettingsForm.vue'
