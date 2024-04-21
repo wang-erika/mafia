@@ -264,14 +264,18 @@ export default defineComponent({
 }
 
 table {
-  width: 100%;
+    width: 100%;
   margin-bottom: 20px;
   border-collapse: collapse;
+  padding: 10px;
+  border: 1px solid #cccccc9a; 
+
 }
 
 th, td {
-  text-align: left;
+    text-align: left;
   padding: 8px;
+  border: 1px solid #cccccc9a;
 }
 
 .custom-radio input[type="radio"] {
