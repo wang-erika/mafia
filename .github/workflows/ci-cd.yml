@@ -36,4 +36,5 @@ jobs:
       uses: azure/setup-kubectl@v1
 
     - name: Deploy to Kubernetes
+      run: kubectl delete -f k8s
       run: kubectl apply -f k8s/

@@ -35,7 +35,7 @@ if (mode === 'production') {
 }
 const io = new SocketIO(server, {
     cors: {
-        origin: `http://localhost:${uiPort}`,
+        origin: `http://localhost:8130`,
         methods: ["GET", "POST"],
     },
 });
@@ -63,9 +63,9 @@ app.use(passport.session());
 passport.serializeUser((user, done) => {
     done(null, user)
   })
-  passport.deserializeUser((user, done) => {
+passport.deserializeUser((user, done) => {
     done(null, user)
-  })
+    })
 
 // Authentication routes
 app.get('/api/auth', passport.authenticate('oidc'));
@@ -110,8 +110,9 @@ app.get('/api/callback', (req, res, next) => {
 app.get('/api/callback', passport.authenticate('oidc', {
     failureRedirect: '/login',
 }), (req, res) => {
-    res.redirect(`http://localhost:${uiPort}`)
+    res.redirect(`http://localhost:${uiPort}/lobby`)
 })
+
 
 
 // Route to check on front end 

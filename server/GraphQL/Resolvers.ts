@@ -382,6 +382,9 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 }
 
 async function createGame(_parent: any, _args: any, context: IContext) {
+  if (!context.user.groups.includes("mafia-admin")) {
+    throw new Error("Only admins can create a game.");
+  }
   const newRole = assignRole([])
   const newHost = {
     id: context.user.nickname,

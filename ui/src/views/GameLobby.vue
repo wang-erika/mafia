@@ -15,8 +15,8 @@
                     </li>
                 </ul>
             </div>
-            <button class="button" v-if="result.gameState.round < 1" @click="handleAddPlayer">Join Game</button>
-            <button class="button" @click="handleSpectateGame">Spectate</button>
+            <button class="button" v-if="result.gameState.round < 1" @click="handleAddPlayer">Join As Player</button>
+            <button class="button" @click="handleSpectateGame">Enter Game</button>
         </div>
         <div v-else>
             <h4>No current game</h4>

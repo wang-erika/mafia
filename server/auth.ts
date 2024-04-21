@@ -24,10 +24,11 @@ const setupOIDC = async () => {
     nonce: generators.nonce(),
     state: generators.state()
    }
-   function verify(tokenSet: any, userInfo: any, done: (error: any, user: any) => void) {
-
+   async function verify(tokenSet: any, userInfo: any, done: any) {
+    console.log("OIDC verification:", userInfo);
+    userInfo.roles = userInfo.groups.includes("mafia-admin") ? ["admin"] : ["user"]
     return done(null, userInfo)
-  }
+}
   passport.use('oidc', new Strategy( { client, params }, verify))
 
   } catch (error) {
