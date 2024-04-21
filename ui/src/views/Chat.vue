@@ -9,7 +9,8 @@
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} {{ gameStateResult.round }} </h1>
+        <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} </h1>
+        <h4 v-if="gameStateResult"> Round:  {{ gameStateResult.round }} </h4>
         
         <div>
           Time Remaining: 

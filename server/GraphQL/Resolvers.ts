@@ -255,7 +255,7 @@ async function calculateMafiaMostVoted(gameState: any): Promise<string | null> {
 }
 
 
-async function checkGameEndCondition(gameState: any): Promise<boolean> {
+async function checkGameEndCondition(gameState: any): Promise<String | null> {
   let mafiaCount = 0;
   let villagerCount = 0;
 
@@ -270,10 +270,13 @@ async function checkGameEndCondition(gameState: any): Promise<boolean> {
     }
   });
 
-  if (mafiaCount >= villagerCount || mafiaCount === 0) {
-    return true; // Game should end
+  if (mafiaCount >= villagerCount) {
+    return "mafia-Win"
   }
-  return false; // Game continues
+  else if (mafiaCount === 0){
+    return "villager-Win"
+  }
+  return null;
 }
 
 
@@ -313,13 +316,16 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
     gameState.phase = "night"
     gameState.round = gameState.round + 1
 
-    if (await(checkGameEndCondition(gameState))) {
-      gameState.phase = "end"
+    const endMessage = await(checkGameEndCondition(gameState))
+
+    if (endMessage) {
+      gameState.phase = endMessage
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: 'end' } },
+        { $set: { phase: endMessage } },
       );
     }
+
     else{    // Update game state with the new player status and move to the next round
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
@@ -362,11 +368,14 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     gameState.phase = "day"
     
-    if (await(checkGameEndCondition(gameState))) {
-      gameState.phase = "end"
+
+    const endMessage = await(checkGameEndCondition(gameState))
+
+    if (endMessage) {
+      gameState.phase = endMessage
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: 'end' } },
+        { $set: { phase: endMessage } },
       );
     }
     // Update game state with the new player status and move to the next round
@@ -388,18 +397,24 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
     gameState.phase = "night"
     gameState.round = 1
 
-    await context.db.collection('GameState').updateOne(
-      { _id: gameState._id },
-      { $set: { round: gameState.round, phase: gameState.phase } },
-    );
-  }
 
+    const endMessage = await(checkGameEndCondition(gameState))
 
-  if (await(checkGameEndCondition(gameState))) {
-    await context.db.collection('GameState').updateOne(
-      { _id: gameState._id },
-      { $set: { phase: 'end' } },
-    );
+    if (endMessage) {
+      gameState.phase = endMessage
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { phase: endMessage } },
+      );
+    }
+
+    else{
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { round: gameState.round, phase: gameState.phase } },
+      );
+    }
+
   }
 
   // Check if the user is authenticated
