@@ -1,4 +1,7 @@
 FROM library/node:18-alpine as esbuild
+RUN apk add --no-cache python3 make g++ \
+    && ln -sf python3 /usr/bin/python \
+    && ln -sf python3 /usr/bin/python2
 WORKDIR /home/node/app
 COPY *.js* ./
 COPY *.ts* ./
