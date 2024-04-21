@@ -65,58 +65,67 @@ export default defineComponent({
 
     const { result, loading, error } = useQuery(gql`
       query GameStateQuery {
-        gameState {
-          _id
-          phase
-          players {
-            name
-            role
-            status
-            id
-            killVote
-            votes
+          gameState {
+              _id
+              phase
+              players {
+                  name
+                  role
+                  status
+                  id
+                  killVote
+                  votes
+              }
+              round
+              hostId
+              startTime
           }
-          round
-        }
       }
-    `);
+    `)
+
     const newMessage = ref('');
     const messagesData = ref<Message[]>([]);
     const userInfo = ref({ userId: '', name: '' });
     const gameState = computed(() => result.value?.gameState);
-    const startTime = ref(gameState.value?.startTime || null);
+    const newStartTime = ref('');
 
     const { mutate: setStartTime, loading: mutateLoading, error: mutateError } = useMutation(gql`
-      mutation SetStartTime($time: String!) {
-        setStartTime(time: $time) {
-          _id
+      mutation SetStartTime($startTime: String!) {
+        setStartTime(startTime: $startTime) {
           startTime
         }
       }
-    `, () => ({
-      variables: {
-        time: startTime.value  
-      }
-    }))
+`);
+
 
    
     const timerDuration = ref(30000); // 30 seconds
     const now = useTimestamp({ interval: 200 });
     const timeRemaining = computed(() => {
-      if (startTime.value) {
-        const start = Date.parse(startTime.value);
+      if (newStartTime.value) {
+        const start = Date.parse(newStartTime.value);
         return Math.max(0, start + timerDuration.value - now.value);
       }
       return 0;
     });
 
     const start = async () => {
-      startTime.value = new Date().toISOString();
-        setStartTime()
-    };
+  newStartTime.value = new Date().toISOString();
+  try {
+    await setStartTime({
+      variables: {
+        startTime: newStartTime.value,
+      }
+    });
+  } catch (err) {
+    console.error('Error updating startTime:', err);
+    if (err.networkError) console.log('Network error:', err.networkError);
+    if (err.graphQLErrors) err.graphQLErrors.forEach((e) => console.log('GraphQL error:', e));
+  }
+};
 
     const stop = () => {
-      startTime.value = null; 
+      newStartTime.value = ''; 
     };
 
     const formatTimestamp = (timestamp: Date) => {
@@ -125,7 +134,7 @@ export default defineComponent({
 
     watchEffect(() => {
       if (gameState.value?.startTime) {
-        startTime.value = gameState.value.startTime;
+        newStartTime.value = gameState.value.startTime;
       }
     });
 
@@ -198,6 +207,7 @@ export default defineComponent({
       error,
       gameState,
       timeRemaining,
+      mutateLoading,
       start,
       stop,
       newMessage,

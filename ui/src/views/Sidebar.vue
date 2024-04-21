@@ -82,6 +82,7 @@ export default defineComponent({
               }
               round
               roomName
+              startTime
           }
       }
     `);

@@ -13,7 +13,6 @@ interface IContext {
 export const pubSub = new PubSub();
 
 const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
-const START_TIME_UPDATED = 'START_TIME_UPDATED';
 
 // Query
 
@@ -458,14 +457,16 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
 async function setStartTime(_parent: any, { startTime }: { startTime: String }, context: IContext) {
   try {
     const gameState = await context.db.collection('GameState').findOne({})
-    console.log
+    console.log(gameState)
     const updateResult = {
       startTime: startTime
     }
+    console.log("logged to updateResult")
     await context.db.collection('GameState').updateOne(
       { _id: gameState._id },
       { $set: updateResult }
     );
+    console.log("logged to database")
     return await context.db.collection('GameState').findOne({ _id: gameState._id });
   } catch (error) {
     console.error('Database operation failed:', error);
