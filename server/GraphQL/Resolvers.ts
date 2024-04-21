@@ -54,34 +54,32 @@ async function gameState(_parent: any, _args: any, context: IContext) {
     return null;
   }
 
-  // hiding other player roles
+  const endMessage = await(checkGameEndCondition(gameState))
+  console.log(endMessage);
 
-  if (!context.user) {
-    gameState.players = gameState.players.map((player: Player) => ({
-      ...player,
-      role: "?"
-    }));
-  } 
-
-  else{
-    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-    if(!currentUser){
+  if (!endMessage) {
+    // hiding other player roles
+    if (!context.user) {
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-    else{
-      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
+
+    else {
+      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+      if (!currentUser) {
+        gameState.players = gameState.players.map((player: Player) => ({
+          ...player,
+          role: "?"
+        }));
+      }
+      else {
+        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
+      }
     }
   }
-  // Check if the user is authenticated
-  if (!context.user) {
-    gameState.players = gameState.players.map((player: Player) => ({
-      ...player,
-      role: "?"
-    }));
-  } 
+
   return gameState;
 }
 
@@ -329,9 +327,10 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
+      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage , round: 0} },
+        { $set: { phase: endMessage , round: 0, players: gameState.players} },
       );
     }
 
@@ -382,9 +381,10 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
+      gameState.round = 0;
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0 } },
+        { $set: { phase: endMessage, players: gameState.players } },
       );
     }
     // Update game state with the new player status and move to the next round
@@ -411,16 +411,17 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
     if (endMessage) {
       gameState.phase = endMessage
+      gameState.round = 0
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0 } },
+        { $set: { phase: endMessage, round: 0, players: gameState.players } },
       );
     }
 
     else{
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { round: gameState.round, phase: gameState.phase } },
+        { $set: { round: gameState.round, phase: gameState.phase, players: gameState.players } },
       );
     }
 
@@ -428,27 +429,27 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
   const endMessage = await(checkGameEndCondition(gameState))
 
-  if(!endMessage){
-      // hiding other player roles
-  if (!context.user) {
-    gameState.players = gameState.players.map((player: Player) => ({
-      ...player,
-      role: "?"
-    }));
-  } 
-
-  else{
-    const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
-    if(!currentUser){
+  if (!endMessage) {
+    // hiding other player roles
+    if (!context.user) {
       gameState.players = gameState.players.map((player: Player) => ({
         ...player,
         role: "?"
       }));
     }
-    else{
-      gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
+
+    else {
+      const currentUser = gameState.players.find((player: Player) => player.id === context.user.nickname);
+      if (!currentUser) {
+        gameState.players = gameState.players.map((player: Player) => ({
+          ...player,
+          role: "?"
+        }));
+      }
+      else {
+        gameState.players = await (filterPlayerRoles(gameState.players, currentUser));
+      }
     }
-  }
   }
 
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
