@@ -36,153 +36,172 @@
 </template>
 
 
-<script setup lang="ts">
-import { watchEffect, ref, onMounted, nextTick, computed } from 'vue';
-import {  useTimestamp } from '@vueuse/core'
+<script lang="ts">
+import { defineComponent, watchEffect, ref, onMounted, nextTick, computed } from 'vue';
+import { useTimestamp } from '@vueuse/core';
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
-import moment from 'moment'
-import { useQuery, useMutation } from '@vue/apollo-composable'
-import gql from 'graphql-tag'
+import moment from 'moment';
+import { useQuery, useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
 import Sidebar from './Sidebar.vue';
 import InfoBox from './InfoBox.vue';
 import Vote from './Vote.vue';
 import NextPhase from '../components/NextPhase.vue';
 
-const GET_GAME_STATE = gql`
-  query GetGameState {
-    gameState {
-      phase
-      round
-      startTime
+export default defineComponent({
+  components: {
+    Sidebar,
+    InfoBox,
+    Vote,
+    NextPhase
+  },
+  setup() {
+    interface Message {
+      senderId: string;
+      text: string;
+      timestamp: Date;
     }
-  }
-`;
 
-const SET_START_TIME = gql`
-  mutation SetStartTime($time: String!) {
-    setStartTime(time: $time) {
-      _id
-      startTime
-    }
-  }
-`;
+    const { result, loading, error } = useQuery(gql`
+      query GameStateQuery {
+        gameState {
+          _id
+          phase
+          players {
+            name
+            role
+            status
+            id
+            killVote
+            votes
+          }
+          round
+        }
+      }
+    `);
 
-const { result, loading, error } = useQuery(GET_GAME_STATE, {}, {
-  pollInterval: 1000 // Polling every 1000 milliseconds (1 second)
-});
-const { mutate: setStartTime } = useMutation(SET_START_TIME);
-const gameState = computed(() => result.value?.gameState);
+    const { mutate: setStartTime } = useMutation(gql`
+      mutation SetStartTime($time: String!) {
+        setStartTime(time: $time) {
+          _id
+          startTime
+        }
+      }
+    `);
 
-interface Message {
-    senderId: string;
-    text: string;
-    timestamp: Date;
-}
+    const newMessage = ref('');
+    const messagesData = ref<Message[]>([]);
+    const userInfo = ref({ userId: '', name: '' });
+    const gameState = computed(() => result.value?.gameState);
+    const startTime = ref(gameState.value?.startTime || null);
+    const timerDuration = ref(30000); // 30 seconds
+    const now = useTimestamp({ interval: 200 });
+    const timeRemaining = computed(() => {
+      if (startTime.value) {
+        const start = Date.parse(startTime.value);
+        return Math.max(0, start + timerDuration.value - now.value);
+      }
+      return 0;
+    });
 
-const newMessage = ref('')
-const messagesData = ref<Message[]>([])
-const userInfo = ref({ userId: '', name: ''})
+    const start = async () => {
+      const currentTime = new Date().toISOString();
+      try {
+        await setStartTime();
+        startTime.value = currentTime; // Update startTime with the current ISO string
+      } catch (error) {
+        console.error("Error setting start time:", error);
+      }
+    };
 
+    const stop = () => {
+      startTime.value = null; // Clear the start time
+    };
 
-function formatTimestamp(timestamp: any) {
-  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
-}
+    const formatTimestamp = (timestamp: Date) => {
+      return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+    };
 
-const sendChatMessage = () => { 
-    if (!newMessage.value.trim()){
-      return}
-    socket.emit('sendMessage', { 
-      senderId: userInfo.value.name,
-      text: newMessage.value
-  });
-  newMessage.value = ''; 
-};
+    watchEffect(() => {
+      if (gameState.value?.startTime) {
+        startTime.value = gameState.value.startTime;
+      }
+    });
 
-//* TIMER  */
-const startTime = ref(gameState.value?.startTime || 0);
-const timerDuration = ref(30000);
-const now = useTimestamp({ interval: 200 });
-const timeRemaining = computed(() => {
-  const start = Date.parse(startTime.value);
-  return startTime.value ? Math.max(0, start + timerDuration.value - now.value) : 0;
-});
+    onMounted(async () => {
+      await fetchUser();
+      await fetchMessages();
+      scrollToBottom();
+      socket.on("receiveMessage", (userNewMessage: any) => {
+        messagesData.value.push(userNewMessage);
+        scrollToBottom();
+      });
+    });
 
-async function start() {
-  const currentTime = Date.now();
-  try {
-  await setStartTime({
-    variables: {
-      time: currentTime.toString()
-    }
-  });
-} catch (error) {
-  console.error("Error setting start time:", error);
-  if (error.networkError) console.log(`Network error: ${error.networkError}`);
-  if (error.graphQLErrors) error.graphQLErrors.forEach(err => console.log(`GraphQL error: ${err.message}`));
-}
-}
+    const sendChatMessage = async () => {
+      if (!newMessage.value.trim()) return;
+      socket.emit('sendMessage', {
+        senderId: userInfo.value.userId,
+        text: newMessage.value
+      });
+      newMessage.value = '';
+    };
 
-function stop() {
-  startTime.value = 0;
-}
-
-watchEffect(() => {
-  if (gameState.value?.startTime) {
-    startTime.value = gameState.value.startTime;
-  }
-});
-
-onMounted(async () => {
-  await fetchUser();
-  await fetchMessages();
-  scrollToBottom(); // Scroll to bottom after messages are loaded
-
-  socket.on("receiveMessage", (userNewMessage: any) => {
-    messagesData.value.push(userNewMessage);
-    scrollToBottom(); // Scroll to bottom when new messages arrive
-  });
-});
-
-async function fetchUser() {
-  try {
-    const response = await fetch('/api/check');
-    if (!response.ok) {
-      throw new Error("Failed to fetch user information")
-    }
-    const data = await response.json();
-    if (data.isAuthenticated) {
-      userInfo.value = { userId: data.user.nickname, name: data.user.name}
-    } else {
-      userInfo.value = { userId: '', name: 'Guest'}
-    }
-  } catch (error) {
-    console.error("Error fetching user information:", error)
-  }
-}
-async function fetchMessages() {
-    try {
-        const response = await fetch('/api/entries'); 
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/check');
         if (!response.ok) {
-            throw new Error('Failed to fetch initial messages');
+          throw new Error("Failed to fetch user information");
+        }
+        const data = await response.json();
+        userInfo.value = { userId: data.user.nickname, name: data.user.name };
+      } catch (error) {
+        console.error("Error fetching user information:", error);
+      }
+    }
+
+    async function fetchMessages() {
+      try {
+        const response = await fetch('/api/entries');
+        if (!response.ok) {
+          throw new Error('Failed to fetch initial messages');
         }
         const data = await response.json();
         messagesData.value = data;
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching initial messages:', error);
+      }
     }
-}
 
-function scrollToBottom() {
-  nextTick(() => {
-    const container = document.querySelector('.messages');
-    if (container) {
-      container.scrollTop = container.scrollHeight;
+    function scrollToBottom() {
+      nextTick(() => {
+        const container = document.querySelector('.chat-container');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
     }
-  });
-}
 
+    return {
+      result,
+      loading,
+      error,
+      gameState,
+      timeRemaining,
+      start,
+      stop,
+      newMessage,
+      sendChatMessage,
+      messagesData,
+      userInfo,
+      timerDuration,
+      formatTimestamp  // Now properly exposed
+    };
+  }
+});
 </script>
+
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
