@@ -5,6 +5,7 @@ import Chat from './views/Chat.vue';
 import LoginPage from './views/LoginPage.vue'
 import Vote from './views/Vote.vue'
 import GameLobby from './views/GameLobby.vue'
+import Sidebar from './views/Sidebar.vue';
 import SettingsForm from './views/SettingsForm.vue'
 import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
@@ -21,7 +22,7 @@ const routes = [
   },
   { 
     path: "/graphql", 
-    component: Vote
+    component: Sidebar
   },
   {
     path: "/lobby",
@@ -30,7 +31,7 @@ const routes = [
   {
     path: '/settings',
     component: SettingsForm
-  }
+  },
 ];
 
 const router = createRouter({

@@ -2,8 +2,8 @@
     <div class="sidebar">
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="result">{{result.gameState.roomName }}'s Room</h1>
-        <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
+        <h1 v-if="gameStateResult">{{ gameStateResult.roomName}}'s Room</h1>
+        <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
             <table>
                 <thead>
                     <tr>
@@ -13,7 +13,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="player in result.gameState.players" :key="player.id">
+                    <tr v-for="player in gameStateResult.players" :key="player.id">
                         <td>{{ player.name }}</td>
                         <td>{{ player.role }}</td>
                         <td :class="{'status-alive': player.status === 'Alive', 'status-dead': player.status === 'Dead'}">
@@ -30,12 +30,43 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { useQuery } from '@vue/apollo-composable';
+import { defineComponent, watch, ref } from 'vue';
+import { useQuery, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
+
+enum Role {
+  Villager = "Villager",
+  Mafia = "Mafia",
+  Detective = "Detective",
+  Doctor = "Doctor"
+}
+
+interface Player {
+    id: string;
+    name: string;
+    role: Role;
+    status: "Alive" | "Dead";
+    votes: string[];
+    killVote: string[];
+  }
+
+interface GameState {
+  players: Player[];
+  round: number;
+  phase: "day" | "night" | "pre-game" | "end";
+  hostId: string;
+  roomName: string;
+}
+
+interface SubscriptionData {
+    gameStateChanged: GameState;
+}
 
 export default defineComponent({
   setup() {
+
+    const gameStateResult = ref<GameState | null>(null);
+
     const { result, loading, error } = useQuery(gql`
       query GameStateQuery {
           gameState {
@@ -55,8 +86,41 @@ export default defineComponent({
       }
     `);
 
+    watch(result, (newData) => {
+      if (newData && newData.gameState) {
+        gameStateResult.value = newData.gameState;
+        console.log("Initial data loaded:", newData.gameState);
+      }
+    }, { immediate: true });
+
+    const { result: pubSubResult } = useSubscription<SubscriptionData>(gql`
+        subscription Subscription {
+            gameStateChanged {
+                _id
+                hostId
+                phase
+                players {
+                    id
+                    killVote
+                    name
+                    role
+                    status
+                    votes
+                }
+                round
+            }
+        }
+    `);
+
+    watch(pubSubResult, (newData, oldData) => {
+        if (newData) {
+            gameStateResult.value = newData.gameStateChanged;
+            console.log(newData)
+        }
+    });
+
     return {
-      result,
+      gameStateResult,
       loading,
       error
     };
