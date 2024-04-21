@@ -15,7 +15,7 @@ export const typeDefs = gql`
     mafiaCastVote(voterId: String!, voteeId: String!): GameState
     createGame: GameState
     addPlayerToGame(playerId: String!): GameState
-    updateGameSettings(dayLength: Int, nightLength: Int, roomName: String): GameState
+    updateGameSettings(dayLength: Int, nightLength: Int, roomName: String, maxPlayers: Int): GameState
     setStartTime(time:String!):GameState
   }
 
@@ -33,7 +33,8 @@ export const typeDefs = gql`
     dayLength: Int
     nightLength: Int
     roomName: String
-    startTime: String
+    startTime: String,
+    maxPlayers: Int
   }
 
   type Player {

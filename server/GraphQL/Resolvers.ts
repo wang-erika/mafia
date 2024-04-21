@@ -485,6 +485,10 @@ async function addPlayerToGame(_parent: any, { playerId }: { playerId: String },
     throw new Error("Game not found");
   }
 
+  if (gameState.players.length >= gameState.maxPlayers) {
+    throw new Error("Max Players reached!")
+  }
+
   const playerExists = gameState.players.some((player: Player) => player.id === playerId);
   if (playerExists) {
     return gameState
@@ -510,7 +514,7 @@ async function addPlayerToGame(_parent: any, { playerId }: { playerId: String },
   return gameState;
 }
 
-async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName }: { dayLength: number, nightLength: number, roomName: String }, context: IContext) {
+async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName, maxPlayers }: { dayLength: number, nightLength: number, roomName: String, maxPlayers: number }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
   if (!gameState) {
     throw new Error("Game not found")
@@ -522,7 +526,8 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   const updateDoc = {
     dayLength: dayLength,
     nightLength: nightLength,
-    roomName: roomName
+    roomName: roomName,
+    maxPlayers: maxPlayers
   };
 
   await context.db.collection('GameState').updateOne(

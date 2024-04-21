@@ -13,7 +13,11 @@
         <div class="form-group">
           <label for="nightLength">Night Length </label>
           <input type="number" id="nightLength" v-model="form.nightLength" min="10" required>
-          </div>
+        </div>
+        <div class="form-group">
+          <label for="maxPlayers">Max Players</label>
+          <input type="number" id="maxPlayers" v-model="form.maxPlayers" min="10" required>
+        </div>
         <button type="submit" :disabled="loading">Update Settings</button>
       </form>
       <div v-if="error">{{ error.message }}</div>
@@ -30,15 +34,17 @@
       const form = ref({
         roomName: '',
         dayLength: 60,
-        nightLength: 30
+        nightLength: 30,
+        maxPlayers: 15
       });
   
       const { mutate: updateGameSettings, loading, error } = useMutation(gql`
-        mutation UpdateGameSettings( $dayLength: Int!, $nightLength: Int!, $roomName: String!) {
-          updateGameSettings(dayLength: $dayLength, nightLength: $nightLength, roomName: $roomName) {
+        mutation UpdateGameSettings( $dayLength: Int!, $nightLength: Int!, $roomName: String!, $maxPlayers: Int!) {
+          updateGameSettings(dayLength: $dayLength, nightLength: $nightLength, roomName: $roomName, maxPlayers: $maxPlayers) {
             dayLength
             nightLength
             roomName
+            maxPlayers
           }
         }
       `, () => ({
@@ -46,6 +52,7 @@
             dayLength: form.value.dayLength,
             nightLength: form.value.nightLength,
             roomName: form.value.roomName,
+            maxPlayers: form.value.maxPlayers
         }
       }));
   
