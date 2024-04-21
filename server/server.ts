@@ -11,11 +11,10 @@ import cors from 'cors';
 import moment from 'moment';
 import { setupOIDC } from './auth';
 import { execute, subscribe } from 'graphql';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
-const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client/core');
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client/core';
 
 
 // graphql setup
