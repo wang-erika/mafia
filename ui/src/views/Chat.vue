@@ -9,7 +9,7 @@
       <div class="chat-container"> 
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
-        <h1 v-if="gameState">{{ gameState.phase.charAt(0).toUpperCase() + gameState.phase.slice(1)}} {{ gameState.round }} </h1>
+        <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} {{ gameStateResult.round }} </h1>
         
         <div>
           Time Remaining: 
@@ -38,17 +38,26 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import {  useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
 import moment from 'moment'
-import { useQuery, useMutation } from '@vue/apollo-composable'
+import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import InfoBox from './InfoBox.vue';
 import Vote from './Vote.vue';
 import NextPhase from '../components/NextPhase.vue';
+import {GameState, SubscriptionData } from './data'
+
+
+interface Message {
+    senderId: string;
+    text: string;
+    timestamp: Date;
+}
+
 
 const GET_GAME_STATE = gql`
   query GetGameState {
@@ -69,19 +78,53 @@ const SET_START_TIME = gql`
   }
 `;
 
+const { result: pubSubResult } = useSubscription<SubscriptionData>(gql`
+    subscription Subscription {
+        gameStateChanged {
+            _id
+            hostId
+            phase
+            players {
+                id
+                killVote
+                name
+                role
+                status
+                votes
+            }
+            round
+        }
+    }
+`);
+
+
+// game state
+
 const { result, loading, error } = useQuery(GET_GAME_STATE);
 const { mutate: setStartTime } = useMutation(SET_START_TIME);
-const gameState = computed(() => result.value?.gameState);
+//const gameState = computed(() => result.value?.gameState);
+const gameStateResult = ref<GameState | null>(null);
 
-interface Message {
-    senderId: string;
-    text: string;
-    timestamp: Date;
-}
+watch(result, (newData) => {
+  if (newData && newData.gameState) {
+    gameStateResult.value = newData.gameState;
+    console.log("Initial data loaded:", newData.gameState);
+  }
+}, { immediate: true });
+
+watch(pubSubResult, (newData, oldData) => {
+  if (newData) {
+    gameStateResult.value = newData.gameStateChanged;
+    console.log(newData)
+  }
+});
+
+/// Message
 
 const newMessage = ref('')
 const messagesData = ref<Message[]>([])
 const userInfo = ref({ userId: '', name: ''})
+
 
 
 function formatTimestamp(timestamp: any) {

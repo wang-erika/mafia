@@ -67,44 +67,7 @@ passport.serializeUser((user, done) => {
 
 // Authentication routes
 app.get('/api/auth', passport.authenticate('oidc'));
-/*
-app.get('/api/callback', (req, res, next) => {
-    console.log("Hi")
-    passport.authenticate('oidc', (err: any, user: any) => {
-        if (err) {
-            return next(err);
-        }
-        if (!user) {
-            return res.redirect('/login');
-        }
-        req.logIn(user, async (loginErr) => {
-            if (loginErr) {
-                return next(loginErr);
-            }
-            const db = client.db("chatApp");
-            const gameState = await db.collection("GameState").findOne({});
-            if (gameState) {
-                const isPlayerInGame = gameState.players.some((player: { id: String; }) => player.id === user.nickname);
-                if (!isPlayerInGame) {
-                    gameState.players.push({
-                        id: user.nickname,
-                        name: user.name,
-                        role: assignRole(gameState.players),
-                        status: 'Alive',
-                        votes: [],
-                        killVote: []
-                    });
-                    await db.collection("GameState").updateOne({}, { $set: { players: gameState.players } });
-                }
-            } 
-            else {
-                res.status(404).send("No game found")
-            }
-            return res.redirect('http://localhost:8130');
-        });
-    })(req, res, next);
-});
-*/
+
 app.get('/api/callback', passport.authenticate('oidc', {
     failureRedirect: '/login',
 }), (req, res) => {
@@ -122,11 +85,6 @@ app.get('/api/check', (req, res) => {
 })
 
 app.use(express.json());
-
-// app.use((req, res, next) => {
-//     console.log("app.use: ", req.user, req.url, req.headers.cookie);
-//     next()
-// })
 
 // API route for fetching message entries
 app.get('/api/entries', async (req, res) => {
@@ -169,8 +127,6 @@ async function startApolloServer() {
     const apolloServer = new ApolloServer({
         schema,
         context: ({ req }) => {
-            // console.log("Apollo Context - Session:", req.session);
-            // console.log("Apollo Context - User:", req.user);
             return {
                 db: client.db("chatApp"),
                 user: req.user
@@ -190,7 +146,7 @@ async function startApolloServer() {
     useServer({
         schema, 
         context: async () => ({
-            db: client.db("chatApp")
+            db: client.db("chatApp"), 
         })
     }, wsServer);
 
