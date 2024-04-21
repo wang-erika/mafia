@@ -17,17 +17,16 @@ const setupOIDC = async () => {
         console.log("you must supply ?key=" + 'disable_security' + " to log in via DISABLE_SECURITY")
         done(null, false)
       } else {
-        console.log("Test")
         const user = {
-          id: "10402",
+          nickname: "10402",
           name: "E2E Test",
           email: "jj312@duke.edu", 
-          roles:[ "admin" ]
+          roles:[ "admin" ],
+          groups: [req.query.groups]
       };
         done(null, user)
       }
     }))
-
 
     const issuer = await Issuer.discover('https://gitlab.oit.duke.edu'); // Discover your OIDC issuer's configuration
     const client = new issuer.Client({
@@ -46,8 +45,8 @@ const setupOIDC = async () => {
     console.log("OIDC verification:", userInfo);
     userInfo.roles = userInfo.groups.includes("mafia-admin") ? ["admin"] : ["user"]
     return done(null, userInfo)
-}
-passport.use('oidc', new Strategy( { client, params }, verify))
+  }
+    passport.use('oidc', new Strategy( { client, params }, verify))
 
   } catch (error) {
     console.error('OIDC setup failed:', error);

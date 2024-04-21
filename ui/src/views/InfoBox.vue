@@ -8,7 +8,7 @@
                 <p>Your Role: {{ currentUserDetails.role }}</p>
                 <p>Your Status: <span :class="{'status-alive': currentUserDetails.status === 'Alive', 'status-dead': currentUserDetails.status === 'Dead'}">{{ currentUserDetails.status }}</span></p>
                 <div v-if="userResult.currentUser == result.gameState.hostId">
-                    <a href = '/settings'>Game Settings</a> (Host only)
+                    <a id="settings" href = '/settings'>Game Settings</a> (Host only)
                 </div>
             </div>
             <div v-if="Number(result.gameState.round) < 1">

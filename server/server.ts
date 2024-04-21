@@ -36,7 +36,7 @@ if (mode === 'production') {
 }
 const io = new SocketIO(server, {
     cors: {
-        origin: `http://localhost:8130`,
+        origin: `http://localhost:31000`,
         methods: ["GET", "POST"],
     },
 });
