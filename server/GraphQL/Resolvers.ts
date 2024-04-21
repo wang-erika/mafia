@@ -10,11 +10,7 @@ interface IContext {
   user: any;
 }
 
-var pubSub: PubSub;
-
-export function setPubSub(ps: PubSub) {
-  pubSub = ps;
-}
+export const pubSub = new PubSub();
 
 const GAME_STATE_CHANGED = 'GAME_STATE_CHANGED';
 const START_TIME_UPDATED = 'START_TIME_UPDATED';
