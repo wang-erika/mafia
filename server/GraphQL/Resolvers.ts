@@ -271,10 +271,10 @@ async function checkGameEndCondition(gameState: any): Promise<String | null> {
   });
 
   if (mafiaCount >= villagerCount) {
-    return "mafia-Win"
+    return "mafia-win"
   }
   else if (mafiaCount === 0){
-    return "villager-Win"
+    return "villager-win"
   }
   return null;
 }
