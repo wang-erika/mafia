@@ -53,9 +53,7 @@ async function gameState(_parent: any, _args: any, context: IContext) {
   if (!gameState) {
     return null;
   }
-
-  // hiding other player roles
-
+  // Check if the user is authenticated
   if (!context.user) {
     gameState.players = gameState.players.map((player: Player) => ({
       ...player,
@@ -75,13 +73,6 @@ async function gameState(_parent: any, _args: any, context: IContext) {
       gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
-  // Check if the user is authenticated
-  if (!context.user) {
-    gameState.players = gameState.players.map((player: Player) => ({
-      ...player,
-      role: "?"
-    }));
-  } 
   return gameState;
 }
 
@@ -331,7 +322,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       gameState.phase = endMessage
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage , round: 0} },
+        { $set: { phase: endMessage } },
       );
     }
 
@@ -384,7 +375,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       gameState.phase = endMessage
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0 } },
+        { $set: { phase: endMessage } },
       );
     }
     // Update game state with the new player status and move to the next round
@@ -413,7 +404,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       gameState.phase = endMessage
       await context.db.collection('GameState').updateOne(
         { _id: gameState._id },
-        { $set: { phase: endMessage, round: 0 } },
+        { $set: { phase: endMessage } },
       );
     }
 
@@ -426,10 +417,7 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
 
   }
 
-  const endMessage = await(checkGameEndCondition(gameState))
-
-  if(!endMessage){
-      // hiding other player roles
+  // Check if the user is authenticated
   if (!context.user) {
     gameState.players = gameState.players.map((player: Player) => ({
       ...player,
@@ -449,11 +437,10 @@ async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
       gameState.players = await(filterPlayerRoles(gameState.players, currentUser));
     }
   }
-  }
+
 
   pubSub.publish(GAME_STATE_CHANGED, { gameStateChanged: gameState });
 }
-
 
 async function createGame(_parent: any, _args: any, context: IContext) {
   if (!context.user.groups.includes("mafia-admin")) {
