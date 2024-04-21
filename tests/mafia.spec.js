@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('bypass login using disable-security strategy', async ({ page }) => {
-    await page.goto('http://localhost:31000/api/auth?key=disable-security');
+    await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   
     const response = await page.request.get('http://localhost:31000/api/check');
     const responseBody = await response.json();
@@ -10,7 +10,7 @@ test('bypass login using disable-security strategy', async ({ page }) => {
   
 
 test('start game and access host-only features', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security&groups=mafia-admin');
+  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test&groups=mafia-admin');
   await page.goto('http://localhost:31000/lobby')
   await page.click('text=Create Game')
   await page.waitForURL('http://localhost:31000/')
@@ -37,18 +37,18 @@ test('start game and access host-only features', async ({ page }) => {
 })
 
 test('login and join existing game through lobby', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security');
+  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   await page.goto('http://localhost:31000/lobby')
   await page.click('text=Join As Player')
 })
 
 test('login and send a chat message', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security');
+  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   await page.goto('http://localhost:31000/lobby')
 })
 
 test('user can send a chat message', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security');
+  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   await page.goto('http://localhost:31000/')
   await page.waitForSelector('input[placeholder="Type a message..."]', { state: 'visible' });
 

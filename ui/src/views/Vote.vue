@@ -23,11 +23,11 @@
                   </label>
                 </td>
               </tr>
-              <tr v-for="player in alivePlayers" :key="player.id" :class="{ 'disabled-row': player.status !== 'Alive' || (gameStateResult.phase === 'night' && player.role !== 'Mafia')}">
+              <tr v-for="player in alivePlayers" :key="player.id" :class="{ 'disabled-row': player.status !== 'Alive' || (gameStateResult.phase === 'night' && player.role === 'Mafia')}">
                 <td>{{ player.name }}</td>
                 <td>
                   <label class="custom-radio">
-                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| (gameStateResult.phase === 'night' && player.role !== 'Mafia')">
+                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'|| (gameStateResult.phase === 'night' && player.role === 'Mafia')">
                     <span class="radio-box"></span>
                   </label>
                 </td>

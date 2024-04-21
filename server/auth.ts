@@ -18,10 +18,8 @@ const setupOIDC = async () => {
         done(null, false)
       } else {
         const user = {
-          nickname: "10402",
-          name: "E2E Test",
-          email: "jj312@duke.edu", 
-          roles:[ "admin" ],
+          nickname: req.query.nickname,
+          name: req.query.name,
           groups: [req.query.groups]
       };
         done(null, user)

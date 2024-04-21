@@ -47,4 +47,3 @@ export const typeDefs = gql`
   }
 
 `;
-

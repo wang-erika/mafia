@@ -457,9 +457,12 @@ async function createGame(_parent: any, _args: any, context: IContext) {
   };
   const newGame = {
     round: 0,
-    phase: 'day',
+    phase: 'pre-game',
     players: [newHost] as Player[],
-    hostId: newHost.id
+    hostId: newHost.id,
+    dayLength: 60,
+    nightLength: 60,
+    maxPlayers: 10
   };
   const result = await context.db.collection('GameState').insertOne(newGame);
   return await context.db.collection('GameState').findOne({ _id: result.insertedId });
