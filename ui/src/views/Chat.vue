@@ -1,13 +1,17 @@
 <template>
   <div class="main-container">
     <div class="vote-container">
-      <InfoBox />
-      <Vote/>
+      <div class="info-box-wrapper">
+        <InfoBox />
+      </div>
+      <div class="vote-wrapper">
+        <Vote />
+      </div>
       <NextPhase />
+      <button @click="start">Set current time</button>
     </div>
     <div class="content-container"> 
       <div class="chat-container"> 
-        <button @click="start">Set current time</button>
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} </h1>
@@ -183,14 +187,14 @@ function formatTimestamp(timestamp: any) {
   return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
 }
 
-const startTime = ref("");
+const startTime = ref(0);
 const timerDuration = ref(30000)
 const now = useTimestamp({ interval: 200 })
 const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
 
 const { mutate: setStartTime } = useMutation(SET_START_TIME, () => ({
   variables: {
-    startTime: startTime.value
+    startTime: formatTimestamp(startTime.value)
   }
 })
 );
@@ -201,7 +205,7 @@ async function start() { //temporary for now (should connect to start button fro
 
   console.log(formatTimestamp(Date.now()))
 
-  startTime.value = formatTimestamp(Date.now())
+  startTime.value = Date.now()
 
   await setStartTime();
 }
@@ -239,10 +243,30 @@ onMounted(async () => {
   flex-wrap: wrap;
   margin: 2em;
 }
+
+.vote-container {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 1em; /* This adds space between all children */
+}
+
+.info-box-wrapper, .vote-wrapper {
+  margin-bottom: 1em; /* This adds space at the bottom of each component */
+}
+
+/* You might want to remove the bottom margin from the last element */
+.vote-container > *:last-child {
+  margin-bottom: 0;
+}
+
+/*
 .vote-container {
   width: 25%;
   gap: 25px;
 }
+*/
+
 @media (max-width: 768px) {
   .main-container {
     flex-direction: column;
