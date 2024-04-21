@@ -457,16 +457,15 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
 
 async function setStartTime(time:any, context: IContext ) {
   try {
-    const gameStateCollection = context.db.collection('GameState');
-    const updateResult = await gameStateCollection.findOneAndUpdate(
-      {},
-      { $set: { startTime: time } },
-      { returnDocument: 'after' }
-    );
-    if (!updateResult.value) {
-      throw new Error('GameState not found or update failed.');
+    const gameState = await context.db.collection('GameState').findOne({})
+    const updateResult = {
+      startTime: time
     }
-    return updateResult.value;
+    await context.db.collection('GameState').updateOne(
+      { _id: gameState._id },
+      { $set: updateResult }
+    );
+    return await context.db.collection('GameState').findOne({ _id: gameState._id });
   } catch (error) {
     console.error('Database operation failed:', error);
     throw new Error('Failed to update the database.');

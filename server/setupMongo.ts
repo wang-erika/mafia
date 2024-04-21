@@ -90,7 +90,6 @@ export async function main() {
         await db.collection("GameState").insertOne(gameState);
     }
 
-
     process.exit(0)
 }
 
