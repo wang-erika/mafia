@@ -8,7 +8,7 @@
         <Vote />
       </div>
       <NextPhase />
-      <button @click="start">Set current time</button>
+      <b-button class="rounded-btn" @click="start">Set current time</b-button>
     </div>
     <div class="content-container"> 
       <div class="chat-container"> 
@@ -342,7 +342,7 @@ input {
 }
 
 strong {
-  color: #007bff;
+  color: #3700ff;
 }
 
 .timestamp {
@@ -358,15 +358,22 @@ input, button {
 }
 
 button {
-  background-color: #0056b3;
+  background-color: #ff00ea;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 20px; /* Increase border-radius for rounder edges */
   cursor: pointer;
+  padding: 10px 20px; /* Adjust padding as needed */
+}
+
+button, .rounded-btn {
+  background-color: #ff00ea; /* Replace with your desired color */
+  border-radius: 50px; /* Adjust as needed for desired roundness */
+  /* ... other styles ... */
 }
 
 button:hover {
-  background-color: #004494;
+  background-color: #88007d;
 }
 
 

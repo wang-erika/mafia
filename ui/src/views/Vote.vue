@@ -34,7 +34,7 @@
               </tr>
             </tbody>
           </table>
-          <button type="submit" :disabled="selectedVote === null" class="submit-btn">Submit Vote</button>
+          <b-button type="submit" :disabled="selectedVote === null">Submit Vote</b-button>
         </form>
       </div>
       <div v-else class="no-data-message">No players data available.</div>
@@ -231,7 +231,7 @@ export default defineComponent({
 <style scoped>
 
 .table-container {
-  border: 1px solid #4CAF50;
+  border: 1px solid #ccc;
   border-radius: 5px;
   padding: 25px;
   background-color: #f0f8ff;

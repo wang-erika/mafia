@@ -1,5 +1,5 @@
 <template>
-    <button @click="handleNextPhase">Next Phase</button>
+    <b-button @click="handleNextPhase">Next Phase</b-button>
   </template>
   
 <script lang = "ts">
