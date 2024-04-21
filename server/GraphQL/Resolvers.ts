@@ -55,7 +55,6 @@ async function gameState(_parent: any, _args: any, context: IContext) {
   }
 
   const endMessage = await(checkGameEndCondition(gameState))
-  console.log(endMessage);
 
   if (!endMessage) {
     // hiding other player roles
@@ -533,24 +532,31 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   return await context.db.collection('GameState').findOne({ _id: gameState._id });
 }
 
-async function setStartTime(args: { startTime: string }, context: { db: Db }) {
-  const gameStateCollection = context.db.collection('GameState');
-  try {
-    const updateResult = await gameStateCollection.findOneAndUpdate(
-      { $set: { startTime: args.startTime } },
-      { returnDocument: 'after' }
-    );
-      if (!updateResult.value) {
-          throw new Error("GameState not found or update failed.");
-      }
-    // Publish the updated game state to subscribers
-    pubSub.publish(START_TIME_UPDATED, { startTimeUpdated: updateResult.value });
-    return updateResult.value;
-  } catch (error) {
-    console.error('Error updating GameState:', error);
-    throw new Error('An error occurred during the update.');
+async function setStartTime(_parent: any, { startTime }: { startTime: string }, context: IContext) {
+
+  console.log(startTime)
+
+  if(startTime){
+    try {
+      const gameState = await context.db.collection('GameState').findOne({})
+      gameState.startTime = startTime
+      await context.db.collection('GameState').updateOne(
+        { _id: gameState._id },
+        { $set: { startTime: gameState.startTime } }
+      );
+      return await context.db.collection('GameState').findOne({ _id: gameState._id });
+    } 
+    catch (error) {
+      console.error('Database operation failed:', error);
+      throw new Error('Failed to update the database.');
+    } 
   }
+  else{
+    throw new Error("No starttime.")
+  }
+
 }
+
 
 export const resolvers = {
   Query: {

@@ -16,7 +16,7 @@ export const typeDefs = gql`
     createGame: GameState
     addPlayerToGame(playerId: String!): GameState
     updateGameSettings(dayLength: Int, nightLength: Int, roomName: String): GameState
-    setStartTime(time:String!):GameState
+    setStartTime(startTime:String!):GameState
   }
 
   type Subscription {
