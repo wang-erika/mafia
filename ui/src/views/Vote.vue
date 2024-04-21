@@ -1,47 +1,50 @@
 <template>
     <div>
-        <div v-if="loading">Loading...</div>
-        <div v-if="error">{{ error.message }}</div>
-        <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
-            <div v-if="message">{{ message }}</div>
-            <h1>Vote</h1>
-            <form @submit.prevent="castVote" class="vote-form">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>No Vote</td>
-                            <td>
-                                <label class="custom-radio">
-                                    <input type="radio" value="" v-model="selectedVote">
-                                    <span class="radio-box"></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr v-for="player in alivePlayers" :key="player.id">
-                            <td>{{ player.name }}</td>
-                            <td>
-                                <label class="custom-radio">
-                                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive'">
-                                    <span class="radio-box"></span>
-                                </label>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button type="submit" :disabled="selectedVote === null" class="submit-btn">Submit Vote</button>
-            </form>
-        </div>
-        <div v-else>
-            No players data available.
-        </div>
+      <div v-if="loading">Loading...</div>
+      <div v-if="error">{{ error.message }}</div>
+      <div class="table-container" v-if="gameStateResult && gameStateResult.players && gameStateResult.players.length">
+        <div v-if="message">{{ message }}</div>
+        <h1 v-if="dayOrNight === 'Night'">Mafia is selecting a target...</h1>
+        <h1 v-if="dayOrNight === 'Day'">Vote</h1>
+        <p v-if="!canVote" >You are currently unable to vote.</p>
+        <form @submit.prevent="castVote" class="vote-form">
+          <table>
+            <thead>
+              <tr>
+                <th>Player Name</th>
+                <th>Select</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="player-name" :class="{'disabled-text': !canVote}">No Vote</td>
+                <td>
+                  <label class="custom-radio">
+                    <input type="radio" value="" v-model="selectedVote" :disabled="!canVote">
+                    <span class="radio-box"></span>
+                  </label>
+                </td>
+              </tr>
+              <tr v-for="player in alivePlayers" :key="player.id" :class="{'disabled-row': player.status !== 'Alive' || !canVote}">
+                <td class="player-name" :class="{'disabled-text': !canVote}">{{ player.name }}</td>
+                <td>
+                  <label class="custom-radio">
+                    <input type="radio" :value="player.id" v-model="selectedVote" :disabled="player.status !== 'Alive' || !canVote">
+                    <span class="radio-box"></span>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="submit" :disabled="selectedVote === null || !canVote" class="submit-btn">Submit Vote</button>
+        </form>
+      </div>
+      <div v-else>
+        No players data available.
+      </div>
     </div>
-</template>
-
+  </template>
+  
 
 
 <script lang="ts">
@@ -85,6 +88,8 @@ export default defineComponent({
     const gameStateResult = ref<GameState | null>(null);
     const selectedVote = ref('');
     const message = ref('');
+    const dayOrNight = ref('Night');
+    const canVote = ref(false);
     const alivePlayers = computed(() => {
       return gameStateResult.value?.players.filter((player: Player) => player.status === 'Alive') || [];
     })
@@ -182,14 +187,16 @@ export default defineComponent({
         }
     }, { immediate: true });
 
-    // In your castVote method:
+    // In your castVote method:  
     const castVote = async () => {
         if (selectedVote.value != null) { // This allows the empty string to be a valid choice
             if (gameStateResult.value?.phase === "day") {
+                dayOrNight.value = 'Day';
                 try {
                     await castVoteMutation();
                     //selectedVote.value = '';
                     message.value = "Vote successfully cast!";
+                    canVote.value = true;
                 }
                 catch (e: any) {
                     message.value = e.message; // Display any errors from the mutation
@@ -197,10 +204,13 @@ export default defineComponent({
                 }
             }
             else if (gameStateResult.value?.phase == "night"){
+                dayOrNight.value = 'Night';
                 try {
                     await castMafiaVoteMutation();
                     //selectedVote.value = '';
                     message.value = "Vote successfully cast!";
+                    canVote.value = true;
+
                 }
                 catch (e: any) {
                     message.value = e.message; // Display any errors from the mutation
@@ -223,6 +233,8 @@ export default defineComponent({
       userResult,
       message,
       castVote,
+      canVote,
+      dayOrNight
     };
   }
 });
@@ -246,12 +258,12 @@ export default defineComponent({
 table {
     width: 100%;
     margin-bottom: 20px;
-    border-collapse: collapse; /* Add border-collapse */
+    border-collapse: collapse;
 }
 
 th, td {
     text-align: left;
-    padding: 8px; /* Add some padding to table cells */
+    padding: 8px;
 }
 
 .custom-radio input[type="radio"] {
@@ -264,9 +276,9 @@ th, td {
     display: inline-block;
     position: relative;
     background-color: #f1f1f1;
-    border: 1px solid #d1d1d1; /* Adjust border width for a lighter look */
+    border: 1px solid #d1d1d1;
     cursor: pointer;
-    vertical-align: middle; /* Align the custom radio vertically */
+    vertical-align: middle;
 }
 
 .custom-radio input[type="radio"]:checked + .radio-box {
@@ -291,6 +303,15 @@ th, td {
     display: block;
 }
 
+.disabled-row td {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.disabled-row .custom-radio {
+    pointer-events: none; /* Disable radio button interactions */
+}
+
 .submit-btn {
     padding: 10px 20px;
     background-color: #4CAF50;
@@ -298,12 +319,18 @@ th, td {
     border: none;
     cursor: pointer;
     border-radius: 5px;
-    align-self: center; /* Center the button in the form */
-    margin-top: 10px; /* Add space between the table and the button */
+    align-self: center;
+    margin-top: 10px;
 }
 
 .submit-btn:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #367c39;
+}
+
 </style>
+
