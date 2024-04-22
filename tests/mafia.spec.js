@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('bypass login using disable-security strategy', async ({ page }) => {
-    await page.goto('http://localhostasdfadfas:31000/api/auth?key=disable-security&nickname=test&name=test');
+    await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   
     const response = await page.request.get('http://localhost:31000/api/check');
     const responseBody = await response.json();
