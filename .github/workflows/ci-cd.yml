@@ -11,6 +11,8 @@ jobs:
     runs-on: self-hosted
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Build Docker image for Server
       run: docker build -t jaewonj/mafia-server ./server
