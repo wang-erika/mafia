@@ -3,7 +3,7 @@
         <div v-if="loading">Loading...</div>
         <div v-if="error">{{ error.message }}</div>
         <div class="table-container" v-if="result && result.gameState && result.gameState.players && result.gameState.players.length">
-            <h1>Hello, {{ userResult?.currentUser }}!</h1>
+            <h1>Welcome, {{ userResult?.currentUser }}!</h1>
             <div v-if="currentUserDetails">
                 <p>Your Role: {{ currentUserDetails.role }}</p>
                 <p>Your Status: <span :class="{'status-alive': currentUserDetails.status === 'Alive', 'status-dead': currentUserDetails.status === 'Dead'}">{{ currentUserDetails.status }}</span></p>
