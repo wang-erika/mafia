@@ -37,7 +37,7 @@
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import {  useTimestamp } from '@vueuse/core'
 import { io } from "socket.io-client";
-const socket = io('http://localhost:31001');
+const socket = io('http://localhost:8131');
 import moment from 'moment'
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
@@ -169,42 +169,6 @@ function scrollToBottom() {
   });
 }
 
-
-
-// Timer
-
-function formatTimestamp(timestamp: any) {
-  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
-}
-
-const startTime = ref(0);
-const timerDuration = ref(30000)
-const now = useTimestamp({ interval: 200 })
-const timeRemaining = computed(() => startTime.value ? Math.max(0, startTime.value + timerDuration.value - now.value) : 0)
-
-const { mutate: setStartTime } = useMutation(SET_START_TIME, () => ({
-  variables: {
-    startTime: formatTimestamp(startTime.value)
-  }
-})
-);
-
-
-async function start() { //temporary for now (should connect to start button from config page)
-	//startTime.value = Date.now()
-
-  console.log(formatTimestamp(Date.now()))
-
-  startTime.value = Date.now()
-
-  await setStartTime();
-}
-
-
-
-function stop() {
-	startTime.value = 0
-}
 
 //
 
