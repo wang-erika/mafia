@@ -37,7 +37,7 @@
 import { ref, onMounted, nextTick, watch } from 'vue';
 import moment from 'moment'
 import { io } from "socket.io-client";
-const socket = io('http://localhost:8131');
+const socket = io('http://localhost:31001');
 import { useQuery, useSubscription } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
