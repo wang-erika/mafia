@@ -12,7 +12,7 @@ test('bypass login using disable-security strategy', async ({ page }) => {
 test('start game and access host-only features', async ({ page }) => {
   await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test&groups=mafia-admin');
   await page.goto('http://localhost:31000/lobby')
-  await page.click('text=Create Games')
+  await page.click('text=Create Game')
   await page.waitForLoadState('networkidle');
   await page.waitForURL('http://localhost:31000/')
 
