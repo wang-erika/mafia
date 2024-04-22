@@ -1,6 +1,6 @@
 <template>
     <div class="login-container">
-      <h1>Mafia </h1>
+      <h1>Mafia Hi</h1>
       <div class="login-form">
         <a href = "api/auth" class = 'login-button'>Sign In
         </a>
