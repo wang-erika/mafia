@@ -103,6 +103,7 @@ export default defineComponent({
         console.log('Game Created:', response);
         window.location.href = '/'
       } catch (err) {
+        alert("Only Admin can create a game")
         console.error('Error creating game:', err);
       }
     };

@@ -31,8 +31,3 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: kubectl create -f k8s/
-
-    - name: Port Forwarding
-      run: |
-        sleep 5
-        kubectl port-forward service/db 27017:27017
