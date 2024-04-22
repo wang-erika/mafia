@@ -284,10 +284,16 @@ async function checkGameEndCondition(gameState: any): Promise<String | null> {
   Progresses game to the next phase/round. Updates player statuses based on votes. 
   */
 async function nextRoundOrPhase(_parent: any, args: any, context: IContext) {
+
+  
   const gameState = await context.db.collection('GameState').findOne({});
 
   if (!gameState) {
     throw new Error("Game state not found");
+  }
+
+  if (context.user.nickname !== gameState.hostId) {
+    throw new Error("Only the host can move to next round");
   }
 
   // if the current phase is day, check who was voted for the most and kill them (if not a tie or null).
@@ -446,7 +452,8 @@ async function createGame(_parent: any, _args: any, context: IContext) {
   if (!context.user.groups.includes("mafia-admin")) {
     throw new Error("Only admins can create a game.");
   }
-  const newRole = assignRole([])
+  console.log()
+  const newRole = assignRole([], 2, 4);
   const newHost = {
     id: context.user.nickname,
     name: context.user.name,
@@ -460,9 +467,9 @@ async function createGame(_parent: any, _args: any, context: IContext) {
     phase: 'pre-game',
     players: [newHost] as Player[],
     hostId: newHost.id,
-    dayLength: 60,
-    nightLength: 60,
-    maxPlayers: 10
+    numMafia: 2,
+    numVillager: 4,
+    maxPlayers: 6
   };
   const result = await context.db.collection('GameState').insertOne(newGame);
   return await context.db.collection('GameState').findOne({ _id: result.insertedId });
@@ -470,6 +477,9 @@ async function createGame(_parent: any, _args: any, context: IContext) {
 
 async function addPlayerToGame(_parent: any, { playerId }: { playerId: String }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
+  console.log("maf", gameState.numVillager);
+  console.log("vil", gameState.numMafia);
+
   if (!gameState) {
     throw new Error("Game not found");
   }
@@ -482,7 +492,9 @@ async function addPlayerToGame(_parent: any, { playerId }: { playerId: String },
   if (playerExists) {
     return gameState
   }
-  const newRole = assignRole(gameState.players)
+
+  const newRole = assignRole(gameState.players, gameState.numMafia, gameState.numVillager)
+  console.log(newRole);
 
   const newPlayer = {
     id: context.user.nickname,
@@ -503,7 +515,7 @@ async function addPlayerToGame(_parent: any, { playerId }: { playerId: String },
   return gameState;
 }
 
-async function updateGameSettings(_parent: any, { dayLength, nightLength, roomName, maxPlayers }: { dayLength: number, nightLength: number, roomName: String, maxPlayers: number }, context: IContext) {
+async function updateGameSettings(_parent: any, { numMafia, numVillager, roomName, maxPlayers }: { numMafia: number, numVillager: number, roomName: String, maxPlayers: number }, context: IContext) {
   const gameState = await context.db.collection('GameState').findOne({})
   if (!gameState) {
     throw new Error("Game not found")
@@ -513,8 +525,8 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
   }
 
   const updateDoc = {
-    dayLength: dayLength,
-    nightLength: nightLength,
+    numMafia: numMafia,
+    numVillager: numVillager,
     roomName: roomName,
     maxPlayers: maxPlayers
   };
@@ -528,8 +540,6 @@ async function updateGameSettings(_parent: any, { dayLength, nightLength, roomNa
 }
 
 async function setStartTime(_parent: any, { startTime }: { startTime: string }, context: IContext) {
-
-  console.log(startTime)
 
   if(startTime){
     try {

@@ -64,8 +64,6 @@ export default defineComponent({
       return null;
     });
 
-
-
     return {
       result,
       loading,

@@ -53,7 +53,10 @@ export const gameState: GameState =
         round: 0,
         phase: 'pre-game',
         hostId: "",
-        startTime: ""
+        startTime: "", 
+        numVillager: 4, 
+        numMafia: 2, 
+        maxPlayers: 6
     }
 
 //     // Database connection function

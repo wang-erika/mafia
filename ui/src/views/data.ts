@@ -14,13 +14,18 @@ export enum Role {
       killVote: string[];
     }
   
-  export interface GameState {
-    players: Player[];
-    round: number;
-    phase: "day" | "night" | "pre-game" | "end";
-    hostId: string;
-    roomName: string;
-  }
+    export interface GameState {
+      players: Player[];
+      round: number;
+      phase: "day" | "night" | "pre-game" | "mafia-win" | "villager-Win";
+      hostId: string;
+      startTime: string;
+      maxPlayers?: number;
+      numMafia?: number;
+      numVillager?: number;
+      roomName?: string;
+    }
+    
   
   export interface SubscriptionData {
       gameStateChanged: GameState;

@@ -8,7 +8,6 @@
         <Vote />
       </div>
       <NextPhase />
-      <b-button class="rounded-btn" @click="start">Set current time</b-button>
     </div>
     <div class="content-container"> 
       <div class="chat-container"> 
@@ -16,16 +15,7 @@
         <div v-if="error">{{ error.message }}</div>
         <h1 v-if="gameStateResult">{{ gameStateResult.phase.charAt(0).toUpperCase() + gameStateResult.phase.slice(1)}} </h1>
         <h4 v-if="gameStateResult"> Round:  {{ gameStateResult.round }} </h4>
-        
-        <div>
-          Time Remaining: 
-          <b-form-input v-model="timerDuration" debounce="500" number class="mb-2" />
-          <b-button v-if="!timeRemaining" @click="start">Start</b-button>
-          <b-button v-else @click="stop">Stop</b-button>
-        </div>
-      <div class="timer">
-      Time Remaining: {{ Math.round(timeRemaining) }} ms
-      </div>
+      
         <ul class="messages">
           <li v-for="message in messagesData" :key="message.senderId.toString()">
             <strong>{{ message.senderId }}</strong>: {{ message.text }} <br>

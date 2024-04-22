@@ -239,7 +239,7 @@ export default defineComponent({
 }
 
 .phase-heading {
-  color: #290eee;
+  color: #000000;
   font-size: 30px;
   text-align: center;
 

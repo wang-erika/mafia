@@ -19,6 +19,10 @@ export interface GameState {
   phase: "day" | "night" | "pre-game" | "mafia-win" | "villager-Win";
   hostId: string;
   startTime: string;
+  maxPlayers?: number;
+  numMafia?: number;
+  numVillager?: number;
+  roomName?: number;
 }
 
 export enum Role {
@@ -60,11 +64,15 @@ export function calculateMostVoted(gameState: GameState): string | null {
   return mostVotedPlayerId; // Return the player ID with the most votes
 }
 
-export function assignRole(players: Player[]): Role | null {
+export function assignRole(players: Player[], numMafia: number, numVillager: number): Role | null {
+  // console.log("mafia: ", maxMafia);
+  // console.log("villager: ", maxVillager)
+
   const roleCounts = new Map<Role, number>([
-    [Role.Villager, 3],
-    [Role.Mafia, 2],
+    [Role.Villager, numVillager],
+    [Role.Mafia, numMafia],
   ]);
+
   players.forEach(player => {
     if (player.role && roleCounts.has(player.role)) {
       const currentCount = roleCounts.get(player.role) ?? 0;

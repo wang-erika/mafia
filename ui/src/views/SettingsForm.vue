@@ -3,20 +3,20 @@
       <h2>Update Game Settings</h2>
       <form class = "form" @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label for="roomName">Room Name</label>
+          <label for="roomName">Room Name (current: {{ gameStateResult?.roomName }})</label>
           <input type="text" id="roomName" v-model="form.roomName" required>
         </div>
         <div class="form-group">
-          <label for="dayLength">Day Length</label>
-          <input type="number" id="dayLength" v-model="form.dayLength" min="10" required>
+          <label for="numMafia">Number of Mafia (current: {{ gameStateResult?.numMafia }})</label>
+          <input type="number" id="numMafia" v-model="form.numMafia" min="1" required>
         </div>
         <div class="form-group">
-          <label for="nightLength">Night Length </label>
-          <input type="number" id="nightLength" v-model="form.nightLength" min="10" required>
+          <label for="numVillager"> Number of Villagers (current: {{ gameStateResult?.numVillager }})</label>
+          <input type="number" id="numVillager" v-model="form.numVillager" min="2" required>
         </div>
         <div class="form-group">
-          <label for="maxPlayers">Max Players</label>
-          <input type="number" id="maxPlayers" v-model="form.maxPlayers" min="10" required>
+          <label for="maxPlayers">Max Players (current: {{ gameStateResult?.maxPlayers }})</label>
+          <input type="number" id="maxPlayers" v-model="form.maxPlayers" min="3" required>
         </div>
         <button type="submit" :disabled="loading">Update Settings</button>
       </form>
@@ -25,32 +25,69 @@
   </template>
   
   <script lang="ts">
-  import { defineComponent, ref } from 'vue';
-  import { useMutation } from '@vue/apollo-composable';
+  import { defineComponent, ref, watch } from 'vue';
+  import { useQuery, useMutation } from '@vue/apollo-composable';
+  import { GameState } from './data';
+  
   import gql from 'graphql-tag';
   
   export default defineComponent({
     setup() {
+
+
+
+    const gameStateResult = ref<GameState | null>(null);
+
+      const { result } = useQuery(gql`
+        query GameStateQuery {
+            gameState {
+                _id
+                phase
+                players {
+                    name
+                    role
+                    status
+                    id
+                    killVote
+                    votes
+                }
+                round
+                roomName
+                numMafia
+                numVillager
+                maxPlayers
+            }
+        }
+`);
+
+      watch(result, (newData) => {
+        if (newData && newData.gameState) {
+          gameStateResult.value = newData.gameState;
+        }
+      }, { immediate: true });
+
       const form = ref({
         roomName: '',
-        dayLength: 60,
-        nightLength: 30,
-        maxPlayers: 15
+        numMafia: '',
+        numVillager: '',
+        maxPlayers: ''
       });
-  
+
+
+
       const { mutate: updateGameSettings, loading, error } = useMutation(gql`
-        mutation UpdateGameSettings( $dayLength: Int!, $nightLength: Int!, $roomName: String!, $maxPlayers: Int!) {
-          updateGameSettings(dayLength: $dayLength, nightLength: $nightLength, roomName: $roomName, maxPlayers: $maxPlayers) {
-            dayLength
-            nightLength
+        mutation UpdateGameSettings( $numMafia: Int!, $numVillager: Int!, $roomName: String!, $maxPlayers: Int!) {
+          updateGameSettings(numMafia: $numMafia, numVillager: $numVillager, roomName: $roomName, maxPlayers: $maxPlayers) {
+            numMafia
+            numVillager
             roomName
             maxPlayers
           }
         }
       `, () => ({
         variables: {
-            dayLength: form.value.dayLength,
-            nightLength: form.value.nightLength,
+            numMafia: form.value.numMafia,
+            numVillager: form.value.numVillager,
             roomName: form.value.roomName,
             maxPlayers: form.value.maxPlayers
         }
@@ -70,7 +107,8 @@
         form,
         handleSubmit,
         loading,
-        error
+        error,
+        gameStateResult
       };
     }
   });
