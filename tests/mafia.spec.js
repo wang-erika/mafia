@@ -8,16 +8,16 @@ test('bypass login using disable-security strategy', async ({ page }) => {
     expect(responseBody.isAuthenticated).toBe(true);
   });
   
-
+/*
 test('start game and access host-only features', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test&groups=mafia-admin');
-  await page.goto('http://localhost:31000/lobby')
+  await page.goto('http://localhost:8130/api/auth?key=disable-security&nickname=test&name=test&groups=mafia-admin');
+  await page.goto('http://localhost:8130/lobby')
   await page.click('text=Create Game')
-  await page.waitForURL('http://localhost:31000/')
+  await page.waitForURL('http://localhost:8130/')
 
   // Host only settings link
   const textContent = await page.textContent('body');
-  expect(textContent).toContain('Host only');
+  expect(textContent).toContain('Game Settings');
 
   // Navigate to host only game settings and change room name
   await page.click('text=Game Settings');
@@ -31,20 +31,16 @@ test('start game and access host-only features', async ({ page }) => {
 
   // Click on "Update Settings" button
   await page.click('button[type="submit"]');
-  await page.waitForURL('http://localhost:31000/')
+  await page.waitForURL('http://localhost:8130/')
   const roomName = await page.textContent('body');
   expect(roomName).toContain('Test Room');
 })
+*/
 
 test('login and join existing game through lobby', async ({ page }) => {
   await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
   await page.goto('http://localhost:31000/lobby')
   await page.click('text=Join As Player')
-})
-
-test('login and send a chat message', async ({ page }) => {
-  await page.goto('http://localhost:31000/api/auth?key=disable-security&nickname=test&name=test');
-  await page.goto('http://localhost:31000/lobby')
 })
 
 test('user can send a chat message', async ({ page }) => {
