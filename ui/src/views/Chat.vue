@@ -34,12 +34,11 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed, watch } from 'vue';
-import {  useTimestamp } from '@vueuse/core'
+import { ref, onMounted, nextTick, watch } from 'vue';
+import moment from 'moment'
 import { io } from "socket.io-client";
 const socket = io('http://localhost:8131');
-import moment from 'moment'
-import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable'
+import { useQuery, useSubscription } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import Sidebar from './Sidebar.vue';
 import InfoBox from './InfoBox.vue';
@@ -63,14 +62,6 @@ const GET_GAME_STATE = gql`
       startTime
     }
   }
-`;
-
-const SET_START_TIME = gql`
-    mutation SetStartTime($startTime: String!) {
-      setStartTime(startTime: $startTime) {
-        startTime
-      }
-    }
 `;
 
 
@@ -129,6 +120,10 @@ const sendChatMessage = () => {
   });
   newMessage.value = ''; 
 };
+
+function formatTimestamp(timestamp: any) {
+  return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+}
 
 async function fetchUser() {
   try {
