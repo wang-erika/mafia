@@ -18,7 +18,7 @@ test('start game and access host-only features', async ({ page }) => {
 
   // Host only settings link
   const textContent = await page.textContent('body');
-  expect(textContent).toContain('Game Settings');
+  expect(textContent).toContain('Game Settings and blah blah');
 })
 
 
